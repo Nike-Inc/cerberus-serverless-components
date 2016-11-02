@@ -10,5 +10,4 @@ deploy:
   file: "build/libs/cerberus-cloudfront-lambda.jar"
   on:
     repo: Nike-Inc/cerberus-cloudfront-lambda
-    all_branches: true
     tags: true
