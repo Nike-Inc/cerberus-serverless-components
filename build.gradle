@@ -1,5 +1,5 @@
 group 'com.nike'
-version '1.0.0-SNAPSHOT'
+version '1.0.0'
 
 buildscript {
     repositories {
