@@ -1,12 +1,9 @@
 # Cerberus CloudFront Lambda
 
 [ ![Download](https://api.bintray.com/packages/nike/maven/cerberus-cloudfront-lambda/images/download.svg) ](https://bintray.com/nike/maven/cerberus-cloudfront-lambda/_latestVersion)
-
-[![][https://api.travis-ci.org/Nike-Inc/cerberus-cloudfront-lambda.svg?branch=master]][https://travis-ci.org/Nike-Inc/cerberus-cloudfront-lambda]
-
-[![Code Coverage](https://img.shields.io/codecov/c/github/Nike-Inc/cerberus-cloudfront-lambda/master.svg)](https://codecov.io/github/Nike-Inc/cerberus-cloudfront-lambda?branch=master)
-
-[![][https://img.shields.io/badge/License-Apache%202-blue.svg]][LICENSE.txt]
+[ ![][https://api.travis-ci.org/Nike-Inc/cerberus-cloudfront-lambda.svg?branch=master] ][https://travis-ci.org/Nike-Inc/cerberus-cloudfront-lambda]
+[ ![Code Coverage](https://img.shields.io/codecov/c/github/Nike-Inc/cerberus-cloudfront-lambda/master.svg) ](https://codecov.io/github/Nike-Inc/cerberus-cloudfront-lambda?branch=master)
+[ ![][https://img.shields.io/badge/License-Apache%202-blue.svg] ][LICENSE.txt]
 
 This is a Java based lambda for processing CloudFront log events.
 
