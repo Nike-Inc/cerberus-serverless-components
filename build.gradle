@@ -1,5 +1,5 @@
-group 'com.nike.cpe'
-version '1.0-SNAPSHOT'
+group 'com.nike'
+version '1.0.0'
 
 buildscript {
     repositories {
@@ -7,14 +7,11 @@ buildscript {
     }
     dependencies {
         classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.3'
-        classpath 'org.jfrog.buildinfo:build-info-extractor-gradle:4.4.0'
     }
 }
 
 apply plugin: 'java'
 apply plugin: "com.github.johnrengelman.shadow"
-apply plugin: 'maven-publish'
-apply plugin: 'com.jfrog.artifactory'
 apply plugin: 'jacoco'
 
 jacoco {
@@ -45,6 +42,14 @@ repositories {
     jcenter()
 }
 
+shadowJar {
+    baseName = 'cerberus-cloudfront-lambda'
+    classifier = null
+    version = null
+}
+
+tasks.assemble.finalizedBy shadowJar
+
 tasks.check.dependsOn jacocoTestReport
 
 dependencies {
@@ -64,57 +69,6 @@ dependencies {
     testCompile group: 'org.mockito', name: 'mockito-all', version: '1.9.5'
 
 }
-
-def artifactoryUser = project.hasProperty('artifactoryUser') ? project.artifactoryUser
-        : System.getenv('ARTIFACTORY_USER') ?: ''
-
-def artifactoryPassword = project.hasProperty('artifactoryPassword') ? project.artifactoryPassword
-        : System.getenv('ARTIFACTORY_PASSWORD') ?: ''
-
-
-artifactory {
-    contextUrl = 'https://artifactory.nike.com/artifactory'
-    publish {
-        repository {
-            if (version.contains('-SNAPSHOT')) {
-                repoKey = 'blueprint-snapshots'
-            } else {
-                repoKey = 'blueprint-release'
-            }
-            username = artifactoryUser
-            password = artifactoryPassword
-            maven = true
-
-        }
-
-        defaults {
-            publications('mavenJava')
-            publishArtifacts = true
-        }
-    }
-    resolve {
-        repository {
-            repoKey = 'all-repos'
-            username = artifactoryUser
-            password = artifactoryPassword
-            maven = true
-
-        }
-    }
-}
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            artifact shadowJar
-        }
-    }
-}
-
-artifactoryPublish {
-    dependsOn shadowJar
-}
-
 
 configurations {
     integrationTestCompile.extendsFrom testCompile
