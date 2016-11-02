@@ -42,6 +42,14 @@ repositories {
     jcenter()
 }
 
+shadowJar {
+    baseName = 'cerberus-cloudfront-lambda'
+    classifier = null
+    version = null
+}
+
+tasks.assemble.finalizedBy shadowJar
+
 tasks.check.dependsOn jacocoTestReport
 
 dependencies {
