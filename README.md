@@ -1,7 +1,7 @@
 # Cerberus CloudFront Lambda
 
 [![][travis img]][travis]
-[![Coverage Status](https://coveralls.io/repos/github/Nike-Inc/cerberus-cloudfront-lambda/badge.svg?branch=master)](https://coveralls.io/github/Nike-Inc/cerberus-cloudfront-lambda)
+[![Coverage Status](https://coveralls.io/repos/github/Nike-Inc/cerberus-cloudfront-lambda/badge.svg)](https://coveralls.io/github/Nike-Inc/cerberus-cloudfront-lambda)
 [![][license img]][license]
 
 This is a Java based lambda for processing CloudFront log events.
