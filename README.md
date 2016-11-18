@@ -24,3 +24,10 @@ To build the fat jar required for Lambda run `./gradlew clean shadowJar`
 ## License
 
 Vault client is released under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0)
+
+
+[travis]:https://travis-ci.org/Nike-Inc/cerberus-cloudfront-lambda
+[travis img]:https://api.travis-ci.org/Nike-Inc/cerberus-cloudfront-lambda.svg?branch=master
+
+[license]:LICENSE.txt
+[license img]:https://img.shields.io/badge/License-Apache%202-blue.svg
