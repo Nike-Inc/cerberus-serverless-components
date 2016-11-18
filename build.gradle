@@ -26,6 +26,7 @@ jacocoTestReport {
         xml.enabled true
         csv.enabled false
         html.destination "${buildDir}/reports/jacocoHtml"
+        xml.destination "${buildDir}/reports/jacoco/test"
     }
 
     afterEvaluate {
