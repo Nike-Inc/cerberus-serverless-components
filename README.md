@@ -4,10 +4,13 @@
 [![Coverage Status](https://coveralls.io/repos/github/Nike-Inc/cerberus-cloudfront-lambda/badge.svg?branch=master)](https://coveralls.io/github/Nike-Inc/cerberus-cloudfront-lambda)
 [![][license img]][license]
 
-This is a Java based lambda for processing CloudFront log events.
+This is a Java based lambda for processing CloudFront log events. It is part of the [edge security](http://engineering.nike.com/cerberus/docs/architecture/infrastructure-overview)
+solution for [Cerberus](http://engineering.nike.com/cerberus/).
 
 CloudFrontLogEventHandler::handleNewS3Event(), gets triggered every time Cloud Front saves its logs to S3.
 CloudFrontLogEventHandler has a list of processors that can ingest the events and do various things like rate limiting.
+
+To learn more about Cerberus, please see the [Cerberus website](http://engineering.nike.com/cerberus/).
 
 ## Processors
 
