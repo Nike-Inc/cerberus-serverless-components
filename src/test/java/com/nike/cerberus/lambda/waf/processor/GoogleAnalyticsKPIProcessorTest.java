@@ -81,7 +81,7 @@ public class GoogleAnalyticsKPIProcessorTest {
 
         processor.processLogEvents(events, tracker);
 
-        verify(tracker).trackEvent("error", "unknown", "GET /v1/who-cares");
+        verify(tracker).trackEvent("error", "unknown", "GET 301 /v1/who-cares");
     }
 
     @Test

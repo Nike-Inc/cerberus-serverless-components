@@ -203,7 +203,7 @@ public class GoogleAnalyticsKPIProcessor implements Processor {
     private void trackUnknownStatus(CloudFrontLogEvent event) {
         String eventCategory = "error";
         String eventAction = "unknown";
-        String eventLabel = String.format("%s %s", event.getCsMethod(), event.getCsUriStem());
+        String eventLabel = String.format("%s %s %s", event.getCsMethod(), event.getScStatus(), event.getCsUriStem());
 
         tracker.trackEvent(eventCategory, eventAction, eventLabel);
     }
