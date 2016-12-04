@@ -17,8 +17,11 @@ To learn more about Cerberus, please see the [Cerberus website](http://engineeri
 ### Rate Limiting Processor
 This processor will go through the Cloud Front Log Events and ensures that ips that show up more than the requests per minute limit are added to the auto block list for the Cerberus Env WAF
 
+### Google Analytics KPI Processor
+If you optionally supply a Google Analytics Tracking ID, this processor will track API events such as auth events, sdb creation, etc.
+
 ### Future Processors
-We would like to have a processor for auto blocking ips that spam bad requests and possibly another processor for KPI tracking.
+We would like to have a processor for auto blocking ips that spam bad requests.
 
 ## Building
 
