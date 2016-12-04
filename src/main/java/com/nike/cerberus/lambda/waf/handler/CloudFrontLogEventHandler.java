@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fieldju.slackclient.Message;
 import com.fieldju.slackclient.SlackClient;
 import com.google.common.annotations.VisibleForTesting;
+import com.nike.cerberus.lambda.waf.processor.GoogleAnalyticsKPIProcessor;
 import com.nike.cerberus.lambda.waf.processor.Processor;
 import com.nike.cerberus.lambda.waf.processor.RateLimitingProcessor;
 import com.nike.cerberus.lambda.waf.CloudFrontLogHandlerConfig;
@@ -68,6 +69,7 @@ public class CloudFrontLogEventHandler {
         // RateLimitingProcessor truncates the set and removes any ips from the set that it doesn't know about
         // see CloudFormationDefinedParams
         logEventProcessors.add(new RateLimitingProcessor(objectMapper, awsWaf, amazonS3Client));
+        logEventProcessors.add(new GoogleAnalyticsKPIProcessor());
     }
 
     @VisibleForTesting
