@@ -5,7 +5,10 @@ import com.brsanthu.googleanalytics.GoogleAnalytics;
 import com.nike.cerberus.lambda.waf.CloudFrontLogEvent;
 import com.nike.cerberus.lambda.waf.CloudFrontLogHandlerConfig;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.List;
 
@@ -13,6 +16,8 @@ import java.util.List;
  * Optional Processor for people that would like to keep track of KPIs that can be derived from CloudFront Gateway Logs.
  */
 public class GoogleAnalyticsKPIProcessor implements Processor {
+
+    private final Logger log = Logger.getLogger(getClass());
 
     private GAWrapper tracker;
 

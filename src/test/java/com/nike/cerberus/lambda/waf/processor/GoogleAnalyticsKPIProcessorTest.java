@@ -134,7 +134,7 @@ public class GoogleAnalyticsKPIProcessorTest {
         when(event.getScStatus()).thenReturn("200");
         when(event.getCsMethod()).thenReturn("GET");
         when(event.getCsUriStem()).thenReturn("/v1/secret/app/foo/");
-        when(event.getCsUriQuery()).thenReturn("?list=true");
+        when(event.getCsUriQuery()).thenReturn("list=true");
 
         processor.processLogEvents(events, tracker);
 
