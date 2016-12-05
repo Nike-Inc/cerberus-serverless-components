@@ -132,7 +132,7 @@ public class GoogleAnalyticsKPIProcessor implements Processor {
             eventLabel = StringUtils.join(Arrays.copyOfRange(parts, 5, parts.length), "/");
         }
 
-        eventLabel += !StringUtils.equals(query, "-") ? query : "";
+        eventLabel += !StringUtils.equals(query, "-") ? "?" + query : "";
 
         String eventCategory;
         switch (event.getCsMethod()) {
