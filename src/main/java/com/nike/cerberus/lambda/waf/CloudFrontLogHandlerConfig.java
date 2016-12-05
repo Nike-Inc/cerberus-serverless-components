@@ -19,6 +19,8 @@ public class CloudFrontLogHandlerConfig {
 
     private String slackIcon = ":wolf:";
 
+    private String googleAnalyticsId;
+
     private String env;
 
     public String getManualWhiteListIpSetId() {
@@ -75,6 +77,14 @@ public class CloudFrontLogHandlerConfig {
 
     public void setSlackIcon(String slackIcon) {
         this.slackIcon = slackIcon;
+    }
+
+    public String getGoogleAnalyticsId() {
+        return googleAnalyticsId;
+    }
+
+    public void setGoogleAnalyticsId(String googleAnalyticsId) {
+        this.googleAnalyticsId = googleAnalyticsId;
     }
 
     public String getEnv() {
