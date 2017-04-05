@@ -1,0 +1,290 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Resources:
+
+  # VPC in US East with internet gateway
+  EastVpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: default
+  EastInternetGateway:
+    Type: "AWS::EC2::InternetGateway"
+  EastInternetGatewayAttachment:
+    Type: "AWS::EC2::VPCGatewayAttachment"
+    Properties:
+      InternetGatewayId: !Ref EastInternetGateway
+      VpcId: !Ref EastVpc
+
+  # Public subnet in us-east-1a connected to internet gateway
+  East1aPublicSubnet:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      AvailabilityZone: us-east-1a
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+      VpcId: !Ref EastVpc
+  East1aPublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref EastVpc
+  East1aPublicSubnetRouteTableAssociation:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      RouteTableId: !Ref East1aPublicRouteTable
+      SubnetId: !Ref East1aPublicSubnet
+  East1aPublicInternetGatewayRoute:
+    Type: AWS::EC2::Route
+    DependsOn: EastInternetGatewayAttachment
+    Properties:
+      RouteTableId:
+        Ref: East1aPublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId:
+        Ref: EastInternetGateway
+
+  # Private subnet in us-east-1a connected to public subnet via NAT
+  East1aPrivateSubnet:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      AvailabilityZone: us-east-1a
+      CidrBlock: 10.0.2.0/24
+      MapPublicIpOnLaunch: true
+      VpcId: !Ref EastVpc
+  East1aPrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref EastVpc
+  East1aPrivateSubnetRouteTableAssociation:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      RouteTableId: !Ref East1aPrivateRouteTable
+      SubnetId: !Ref East1aPrivateSubnet
+  East1aPrivateNat:
+    DependsOn: EastInternetGatewayAttachment
+    Type: "AWS::EC2::NatGateway"
+    Properties:
+      AllocationId: !GetAtt East1aPrivateNatEip.AllocationId
+      SubnetId: !Ref East1aPublicSubnet
+  East1aPrivateNatEip:
+    DependsOn: EastInternetGatewayAttachment
+    Type: "AWS::EC2::EIP"
+    Properties:
+      Domain: vpc
+  East1aPrivateSubnetNatRoute:
+    DependsOn: EastInternetGatewayAttachment
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId:
+        Ref: East1aPrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId:
+        Ref: East1aPrivateNat
+
+  # 1b for us-east in our account doesn't support Lambda, I am told but haven't verified that AZ letter assignment is randomized on account creation.
+  # So this may or may not be accurate for you. ex: my 1b may be your 1e
+
+  # Public subnet in us-east-1c connected to internet gateway
+  East1cPublicSubnet:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      AvailabilityZone: us-east-1c
+      CidrBlock: 10.0.5.0/24
+      MapPublicIpOnLaunch: true
+      VpcId: !Ref EastVpc
+  East1cPublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref EastVpc
+  East1cPublicSubnetRouteTableAssociation:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      RouteTableId: !Ref East1cPublicRouteTable
+      SubnetId: !Ref East1cPublicSubnet
+  East1cPublicInternetGatewayRoute:
+    Type: AWS::EC2::Route
+    DependsOn: EastInternetGatewayAttachment
+    Properties:
+      RouteTableId:
+        Ref: East1cPublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId:
+        Ref: EastInternetGateway
+
+  # Private subnet in us-east-1c connected to public subnet via NAT
+  East1cPrivateSubnet:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      AvailabilityZone: us-east-1c
+      CidrBlock: 10.0.6.0/24
+      MapPublicIpOnLaunch: true
+      VpcId: !Ref EastVpc
+  East1cPrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref EastVpc
+  East1cPrivateSubnetRouteTableAssociation:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      RouteTableId: !Ref East1cPrivateRouteTable
+      SubnetId: !Ref East1cPrivateSubnet
+  East1cPrivateNat:
+    DependsOn: EastInternetGatewayAttachment
+    Type: "AWS::EC2::NatGateway"
+    Properties:
+      AllocationId: !GetAtt East1cPrivateNatEip.AllocationId
+      SubnetId: !Ref East1cPublicSubnet
+  East1cPrivateNatEip:
+    DependsOn: EastInternetGatewayAttachment
+    Type: "AWS::EC2::EIP"
+    Properties:
+      Domain: vpc
+  East1cPrivateSubnetNatRoute:
+    DependsOn: EastInternetGatewayAttachment
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId:
+        Ref: East1cPrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId:
+        Ref: East1cPrivateNat
+
+  # Public subnet in us-east-1d connected to internet gateway
+  East1dPublicSubnet:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      AvailabilityZone: us-east-1d
+      CidrBlock: 10.0.7.0/24
+      MapPublicIpOnLaunch: true
+      VpcId: !Ref EastVpc
+  East1dPublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref EastVpc
+  East1dPublicSubnetRouteTableAssociation:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      RouteTableId: !Ref East1dPublicRouteTable
+      SubnetId: !Ref East1dPublicSubnet
+  East1dPublicInternetGatewayRoute:
+    Type: AWS::EC2::Route
+    DependsOn: EastInternetGatewayAttachment
+    Properties:
+      RouteTableId:
+        Ref: East1dPublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId:
+        Ref: EastInternetGateway
+
+  # Private subnet in us-east-1d connected to public subnet via NAT
+  East1dPrivateSubnet:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      AvailabilityZone: us-east-1d
+      CidrBlock: 10.0.8.0/24
+      MapPublicIpOnLaunch: true
+      VpcId: !Ref EastVpc
+  East1dPrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref EastVpc
+  East1dPrivateSubnetRouteTableAssociation:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      RouteTableId: !Ref East1dPrivateRouteTable
+      SubnetId: !Ref East1dPrivateSubnet
+  East1dPrivateNat:
+    DependsOn: EastInternetGatewayAttachment
+    Type: "AWS::EC2::NatGateway"
+    Properties:
+      AllocationId: !GetAtt East1dPrivateNatEip.AllocationId
+      SubnetId: !Ref East1dPublicSubnet
+  East1dPrivateNatEip:
+    DependsOn: EastInternetGatewayAttachment
+    Type: "AWS::EC2::EIP"
+    Properties:
+      Domain: vpc
+  East1dPrivateSubnetNatRoute:
+    DependsOn: EastInternetGatewayAttachment
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId:
+        Ref: East1dPrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId:
+        Ref: East1dPrivateNat
+
+  # Public subnet in us-east-1e connected to internet gateway
+  East1ePublicSubnet:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      AvailabilityZone: us-east-1e
+      CidrBlock: 10.0.9.0/24
+      MapPublicIpOnLaunch: true
+      VpcId: !Ref EastVpc
+  East1ePublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref EastVpc
+  East1ePublicSubnetRouteTableAssociation:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      RouteTableId: !Ref East1ePublicRouteTable
+      SubnetId: !Ref East1ePublicSubnet
+  East1ePublicInternetGatewayRoute:
+    Type: AWS::EC2::Route
+    DependsOn: EastInternetGatewayAttachment
+    Properties:
+      RouteTableId:
+        Ref: East1ePublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId:
+        Ref: EastInternetGateway
+
+  # Private subnet in us-east-1e connected to public subnet via NAT
+  East1ePrivateSubnet:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      AvailabilityZone: us-east-1e
+      CidrBlock: 10.0.10.0/24
+      MapPublicIpOnLaunch: true
+      VpcId: !Ref EastVpc
+  East1ePrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref EastVpc
+  East1ePrivateSubnetRouteTableAssociation:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      RouteTableId: !Ref East1ePrivateRouteTable
+      SubnetId: !Ref East1ePrivateSubnet
+  East1ePrivateNat:
+    DependsOn: EastInternetGatewayAttachment
+    Type: "AWS::EC2::NatGateway"
+    Properties:
+      AllocationId: !GetAtt East1ePrivateNatEip.AllocationId
+      SubnetId: !Ref East1ePublicSubnet
+  East1ePrivateNatEip:
+    DependsOn: EastInternetGatewayAttachment
+    Type: "AWS::EC2::EIP"
+    Properties:
+      Domain: vpc
+  East1ePrivateSubnetNatRoute:
+    DependsOn: EastInternetGatewayAttachment
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId:
+        Ref: East1ePrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId:
+        Ref: East1ePrivateNat
+
+Outputs:
+  PrivateSubnetIds:
+    Description: The subnet ids for the private subnets, needed to supply to Lambdas
+    Value: !Join [ ",", [ !Ref East1aPrivateSubnet, !Ref East1cPrivateSubnet, !Ref East1dPrivateSubnet, !Ref East1ePrivateSubnet ] ]
+  ElasticIpAddresses:
+    Description: The elastic IPs to whitelist
+    Value: !Join [ ",", [ !Ref East1aPrivateNatEip, !Ref East1cPrivateNatEip, !Ref East1dPrivateNatEip, !Ref East1ePrivateNatEip ] ]

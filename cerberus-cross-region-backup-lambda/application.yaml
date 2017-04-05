@@ -1,0 +1,152 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: Cerberus X Region Lambda
+Parameters:
+  Environment:
+    Type: String
+    Description: The environment name that will be used when orginizing backups in S3
+  CerberusUrl:
+    Type: String
+    Description: The url for the cerberus environment
+  AdminUserArn:
+    Type: String
+    Description: The arn for the admin user
+  SubnetIds:
+    Type: CommaDelimitedList
+    Description: Comma-separated VPC subnet Ids to add
+  SecurityGroupIds:
+    Type: CommaDelimitedList
+    Description: Comma-separated list of security groups to use with the lambda, the default security group should be fine here
+Resources:
+  CerberusCrossRegionBackupFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: >-
+         com.nike.cerberus.CerberusCrossRegionBackupHandler::handle
+      Runtime: java8
+      Description: Function for X region Cerberus backups
+      MemorySize: 512
+      Timeout: 300
+      CodeUri: @@CODE_URI@@
+      Role: !GetAtt CerberusCrossRegionBackupRole.Arn
+      Events:
+        Timer:
+          Type: Schedule
+          Properties:
+            Schedule: rate(60 minutes)
+      Environment:
+        Variables:
+          ROLE_NAME: !Ref CerberusCrossRegionBackupRole
+          ACCOUNT_ID: !Ref AWS::AccountId
+          REGION: !Ref AWS::Region
+          BUCKET: !Ref CerberusCrossRegionBackupS3Bucket
+          KMS_KEY_ID: !Ref CerberusCrossRegionBackupKmsKey
+          CERBERUS_URL: !Ref CerberusUrl
+          ENVIRONMENT: !Ref Environment
+      VpcConfig:
+        SubnetIds: !Ref SubnetIds
+        SecurityGroupIds: !Ref SecurityGroupIds
+  CerberusCrossRegionBackupRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              # allow admin for integration testing
+              AWS:
+                - !Ref AdminUserArn
+              Service:
+                - "lambda.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: "/"
+      Policies:
+        -
+          PolicyName: "network-inf-policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: "Allow"
+                Action:
+                  - ec2:DescribeNetworkInterfaces
+                  - ec2:CreateNetworkInterface
+                  - ec2:DeleteNetworkInterface
+                Resource: "*"
+        -
+          PolicyName: "logs-policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: "Allow"
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "*"
+        -
+          PolicyName: "cerberus-policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: "Allow"
+                Action:
+                  - kms:Decrypt
+                Resource: "*"
+  CerberusCrossRegionBackupS3Bucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      VersioningConfiguration:
+        Status: Enabled
+  CerberusCrossRegionBackupS3BucketPolicy:
+    Type: "AWS::S3::BucketPolicy"
+    Properties:
+      Bucket: !Ref CerberusCrossRegionBackupS3Bucket
+      PolicyDocument:
+        Statement:
+          -
+            Action:
+              - "s3:*"
+            Effect: "Allow"
+            Resource:
+              Fn::Join:
+                - ''
+                - - "arn:aws:s3:::"
+                  - !Ref CerberusCrossRegionBackupS3Bucket
+                  - "/*"
+            Principal:
+              AWS:
+                - !GetAtt CerberusCrossRegionBackupRole.Arn
+  CerberusCrossRegionBackupKmsKey:
+    Type: "AWS::KMS::Key"
+    Properties:
+      Description: KMS key to encrypt Cerberus cross region data backups
+      Enabled: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Id: "key-default-1"
+        Statement:
+          -
+            Sid: "Allow administration of the key"
+            Effect: "Allow"
+            Principal:
+              AWS:
+                - !Ref AdminUserArn
+            Action:
+              - "kms:*"
+            Resource: "*"
+          -
+            Sid: "Allow use of the key"
+            Effect: "Allow"
+            Principal:
+              AWS: !GetAtt CerberusCrossRegionBackupRole.Arn
+            Action:
+              - "kms:Encrypt"
+              - "kms:GenerateDataKey*"
+              - "kms:DescribeKey"
+            Resource: "*"

@@ -4,11 +4,26 @@ buildscript {
     apply from: file('gradle/buildscript.gradle'), to: buildscript
 }
 
+// load environment specific props from global and environment profiles
+def environment = project.hasProperty('env') ? project.'env' : 'default'
+Properties props = new Properties()
+def globalProperties = new File("$project.projectDir/profile/${environment}.properties")
+if (globalProperties.exists()) {
+    props.load(new FileInputStream(globalProperties))
+}
+props.load(new FileInputStream("$project.projectDir/profile/${environment}.properties"))
+project.ext.set('environment', environment)
+props.each { prop ->
+    project.ext.set(prop.key, prop.value)
+}
+
 subprojects {
     apply plugin: 'java'
-    apply plugin: "com.github.johnrengelman.shadow"
+    apply plugin: 'groovy'
     apply plugin: 'jacoco'
+    apply plugin: "com.github.johnrengelman.shadow"
     apply plugin: 'com.github.kt3k.coveralls'
+    apply plugin: "com.fieldju.aws-sam-deployer"
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
@@ -71,6 +86,12 @@ subprojects {
         reports.html.destination = file("${reporting.baseDir}/${name}")
         testLogging {
             events "passed", "skipped", "failed"
+        }
+    }
+
+    integrationTest {
+        testLogging {
+            showStandardStreams = true
         }
     }
 }

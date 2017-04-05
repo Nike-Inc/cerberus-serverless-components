@@ -1,0 +1,9 @@
+version = '1.0.0'
+
+'aws-sam-deployer' {
+    region = 'us-east-1'
+    stackName = "us-east-lambda-vpc"
+    samTemplatePath = "${project.projectDir}${File.separator}us-east-lambda-vpc.yaml"
+    tokenArtifactMap = [:]
+}
+

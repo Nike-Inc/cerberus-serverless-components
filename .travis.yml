@@ -11,6 +11,7 @@ deploy:
   file_glob: true
   file:
     - cerberus-cloudfront-lambda/build/libs/cerberus-cloudfront-lambda*
+    - cerberus-cross-region-backup-lambda/build/libs/cerberus-cross-region-backup-lambda*
   on:
-    repo: Nike-Inc/cerberus-cloudfront-lambda
+    repo: Nike-Inc/cerberus-serverless-components
     tags: true

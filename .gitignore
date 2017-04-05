@@ -80,3 +80,11 @@ gradle-app.setting
 src/main/resources/cloudformation/**
 !src/main/resources/cloudformation/.gitkeep
 /smaas-cf/.idea/
+
+# Ignore company specific props
+**/profile/*
+!**/profile/default.properties
+/profile/test.properties
+/profile/dev.properties
+/profile/prod.properties
+/profile/global.properties
