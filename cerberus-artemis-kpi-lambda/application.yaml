@@ -1,0 +1,51 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: Lambda for processing events from the Cerberus metric topic
+Parameters:
+  CerberusMetricTopic:
+    Type: String
+    Description: The topic to subscribe too.
+Resources:
+  GroovyLambdaFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: >-
+         Handler::handle
+      Runtime: java8
+      Description: Groovy Lambda Function
+      MemorySize: 512
+      Timeout: 300
+      CodeUri: @@CODE_URI@@
+      Role: !GetAtt LambdaRole.Arn
+      Environment:
+        Variables:
+          ROLE_NAME: !Ref LambdaRole
+          ACCOUNT_ID: !Ref AWS::AccountId
+          REGION: !Ref AWS::Region
+  LambdaRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: "/"
+      Policies:
+        -
+          PolicyName: "allow-lambda-to-use-logs-policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: "Allow"
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "*"
