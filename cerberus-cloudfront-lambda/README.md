@@ -1,10 +1,6 @@
 # Cerberus CloudFront Lambda
 
-[![][travis img]][travis]
-[![Coverage Status](https://coveralls.io/repos/github/Nike-Inc/cerberus-cloudfront-lambda/badge.svg)](https://coveralls.io/github/Nike-Inc/cerberus-cloudfront-lambda)
-[![][license img]][license]
-
-This is a Java based lambda for processing CloudFront log events. It is part of the [edge security](http://engineering.nike.com/cerberus/docs/architecture/infrastructure-overview)
+This is a JVM based lambda for processing CloudFront log events. It is part of the [edge security](http://engineering.nike.com/cerberus/docs/architecture/infrastructure-overview)
 solution for [Cerberus](http://engineering.nike.com/cerberus/).
 
 CloudFrontLogEventHandler::handleNewS3Event(), gets triggered every time Cloud Front saves its logs to S3.
@@ -25,15 +21,4 @@ We would like to have a processor for auto blocking ips that spam bad requests.
 
 ## Building
 
-To build the fat jar required for Lambda run `./gradlew clean shadowJar`
-
-## License
-
-Vault client is released under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0)
-
-
-[travis]:https://travis-ci.org/Nike-Inc/cerberus-cloudfront-lambda
-[travis img]:https://api.travis-ci.org/Nike-Inc/cerberus-cloudfront-lambda.svg?branch=master
-
-[license]:LICENSE.txt
-[license img]:https://img.shields.io/badge/License-Apache%202-blue.svg
+To build the fat jar required for Lambda run `./gradlew clean cerberus-cloudfront-lambda:shadowJar`
