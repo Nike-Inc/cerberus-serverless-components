@@ -1,2 +1,3 @@
-rootProject.name = 'cerberus-cloudfront-lambda'
+rootProject.name = 'cerberus-serverless-components'
+include "cerberus-cloudfront-lambda"
 

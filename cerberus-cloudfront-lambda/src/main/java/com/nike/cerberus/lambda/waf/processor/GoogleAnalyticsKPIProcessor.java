@@ -7,8 +7,6 @@ import com.nike.cerberus.lambda.waf.CloudFrontLogHandlerConfig;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.List;
 

@@ -1,7 +1,5 @@
 package com.nike.cerberus.lambda.waf.processor;
 
-import com.brsanthu.googleanalytics.EventHit;
-import com.brsanthu.googleanalytics.GoogleAnalytics;
 import com.nike.cerberus.lambda.waf.CloudFrontLogEvent;
 import com.nike.cerberus.lambda.waf.CloudFrontLogHandlerConfig;
 import org.junit.Before;

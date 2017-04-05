@@ -1,0 +1,7 @@
+repositories {
+    jcenter()
+}
+dependencies {
+    classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.3'
+    classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.6.3'
+}
