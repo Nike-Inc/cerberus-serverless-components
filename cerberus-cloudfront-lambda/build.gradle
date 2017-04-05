@@ -21,7 +21,6 @@ dependencies {
 shadowJar {
     baseName = 'cerberus-cloudfront-lambda'
     classifier = null
-    version = null
 }
 
 tasks.assemble.finalizedBy shadowJar
