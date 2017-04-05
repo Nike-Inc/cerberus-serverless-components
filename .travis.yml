@@ -1,6 +1,8 @@
 language: java
 jdk:
 - oraclejdk8
+script:
+  - ./gradlew clean cerberus-cross-region-backup-lambda:shadowJar cerberus-cloudfront-lambda:shadowJar
 after_success:
 - "./gradlew jacocoTestReport coveralls --stacktrace"
 deploy:
