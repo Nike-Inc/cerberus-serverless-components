@@ -1,0 +1,16 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Resources:
+  CerberusMetricsSnsTopic:
+    Type: "AWS::SNS::Topic"
+    Properties:
+      DisplayName: Cerberus Metrics Topic
+      TopicName: cerberus-metrics-topic
+
+Outputs:
+  CerberusMetricsTopicARN:
+    Description: A topic for sending Cerberus metrics to.
+    Value: !Ref CerberusMetricsSnsTopic
+  CerberusMetricsTopicRegion:
+    Description: The region the topic was created in.
+    Value: !Ref AWS::Region

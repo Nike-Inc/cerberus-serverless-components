@@ -7,13 +7,16 @@ buildscript {
 // load environment specific props from global and environment profiles
 def environment = project.hasProperty('env') ? project.'env' : 'default'
 Properties props = new Properties()
-def globalProperties = new File("$project.projectDir/profile/${environment}.properties")
+def globalProperties = new File("$project.projectDir/profile/global.properties")
 if (globalProperties.exists()) {
     props.load(new FileInputStream(globalProperties))
 }
 props.load(new FileInputStream("$project.projectDir/profile/${environment}.properties"))
 project.ext.set('environment', environment)
 props.each { prop ->
+    if (project.hasProperty('log-profile-props') && project.'log-profile-props' == true) {
+        logger.lifecycle("Adding: { key='${prop.key}' value='${prop.value}' } to project ext")
+    }
     project.ext.set(prop.key, prop.value)
 }
 
