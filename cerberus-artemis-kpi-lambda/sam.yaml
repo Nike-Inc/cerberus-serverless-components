@@ -5,6 +5,9 @@ Parameters:
   ArtemisStreamName:
     Type: String
     Description: The Artemis stream to send transformed metrics to.
+  ArtemisStreamArn:
+    Type: String
+    Description: The Artemis stream Arn.
   ArtemisStreamRegion:
     Type: String
     Description: The Artemis stream region.
@@ -16,7 +19,7 @@ Resources:
     Type: 'AWS::Serverless::Function'
     Properties:
       Handler: >-
-         Handler::handleSnsEvent
+         com.nike.cerberus.Handler::handleSnsEvent
       Runtime: java8
       Description: Groovy Lambda Function
       MemorySize: 512
@@ -27,7 +30,7 @@ Resources:
         Variables:
           ARTEMIS_STREAM_NAME: !Ref ArtemisStreamName
           ARTEMIS_STREAM_REGION: !Ref ArtemisStreamRegion
-          CERBERUS_KEY: !Ref AWS::CerberusKey
+          CERBERUS_KEY: !Ref CerberusKey
       Events:
         CerberusMetricTopicEvent:
           Type: SNS
@@ -60,3 +63,13 @@ Resources:
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                 Resource: "*"
+        -
+          PolicyName: "allow-lambda-to-put-messages-in-artemis-stream"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: "Allow"
+                Action:
+                  - kinesis:PutRecord
+                Resource: !Ref ArtemisStreamArn

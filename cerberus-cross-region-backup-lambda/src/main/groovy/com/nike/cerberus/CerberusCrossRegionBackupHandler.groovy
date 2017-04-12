@@ -12,7 +12,9 @@ import com.amazonaws.services.s3.AmazonS3EncryptionClient
 import com.amazonaws.services.s3.model.CryptoConfiguration
 import com.amazonaws.services.s3.model.KMSEncryptionMaterialsProvider
 import com.amazonaws.services.s3.model.ObjectMetadata
-import com.nike.cerberus.util.EnvVarUtils
+import com.amazonaws.services.sns.AmazonSNS
+import com.amazonaws.services.sns.AmazonSNSClient
+import com.fieldju.commons.EnvUtils
 import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
 import groovy.json.internal.LazyMap
@@ -69,12 +71,12 @@ class CerberusCrossRegionBackupHandler {
 
     void handle() {
         log.info 'Checking for required environmental Variables'
-        def url = EnvVarUtils.getRequiredEnvVar(CERBERUS_URL_ENV_VAR_KEY)
-        def accountId = EnvVarUtils.getRequiredEnvVar(ACCOUNT_ID_ENV_VAR_KEY)
-        def rolename = EnvVarUtils.getRequiredEnvVar(ROLE_NAME_ENV_VAR_KEY)
-        def regionString = EnvVarUtils.getRequiredEnvVar(REGION_ENV_VAR_KEY)
-        def backupKmsCMKId = EnvVarUtils.getRequiredEnvVar(KMS_KEY_ENV_VAR_KEY)
-        def backupBucket = EnvVarUtils.getRequiredEnvVar(BUCKET_ENV_VAR_KEY)
+        def url = EnvUtils.getRequiredEnv(CERBERUS_URL_ENV_VAR_KEY)
+        def accountId = EnvUtils.getRequiredEnv(ACCOUNT_ID_ENV_VAR_KEY)
+        def rolename = EnvUtils.getRequiredEnv(ROLE_NAME_ENV_VAR_KEY)
+        def regionString = EnvUtils.getRequiredEnv(REGION_ENV_VAR_KEY)
+        def backupKmsCMKId = EnvUtils.getRequiredEnv(KMS_KEY_ENV_VAR_KEY)
+        def backupBucket = EnvUtils.getRequiredEnv(BUCKET_ENV_VAR_KEY)
 
         log.info 'Creating AWS and Cerberus Clients'
         OkHttpClient client = new OkHttpClient.Builder()
@@ -133,6 +135,34 @@ class CerberusCrossRegionBackupHandler {
         def key = "cerberus-backup-metadata.json"
         log.info("Saving metadata: ${metadata} to ${prefix}/${key}")
         saveDataToS3(s3EncryptionClient, metadata, backupBucket, prefix, key)
+        trackMetadataMetrics(metadata)
+    }
+
+    void trackMetadataMetrics(Map metadata) {
+        try {
+            AmazonSNS sns = AmazonSNSClient.builder().standard().build()
+
+            def topicArn = EnvUtils.getRequiredEnv('CERBERUS_METRICS_TOPIC', 'The ARN for the Cerberus Metrics Topic')
+
+            Map<String, String> dimensions = [:]
+            dimensions.put('cerberusUrl', "${metadata.remove('cerberusUrl')}")
+            dimensions.put('backupDate', "${metadata.remove('backupDate')}")
+            dimensions.put('lambdaBackupAccountId', "${metadata.remove('lambdaBackupAccountId')}")
+            dimensions.put('lambdaBackupRegion', "${metadata.remove('lambdaBackupRegion')}")
+            dimensions.put('environment', EnvUtils.getRequiredEnv('ENVIRONMENT'))
+
+            metadata.each { metric ->
+                sns.publish(topicArn, new JsonBuilder([
+                        metricKey: metric.key as String,
+                        metricValue: metric.value as Integer,
+                        metricType: 'gauge',
+                        dimensions: dimensions
+                ]).toString())
+            }
+
+        } catch (Throwable t) {
+            log.error("Failed to track metadata metrics", t)
+        }
     }
 
     /**
@@ -318,13 +348,13 @@ class CerberusCrossRegionBackupHandler {
 
         RequestBody body = RequestBody.create(JSON,
                 new JsonBuilder([
-                        account_id: System.getenv(ACCOUNT_ID_ENV_VAR_KEY),
-                        role_name: System.getenv(ROLE_NAME_ENV_VAR_KEY),
-                        region: System.getenv(REGION_ENV_VAR_KEY)
+                        account_id: EnvUtils.getRequiredEnv(ACCOUNT_ID_ENV_VAR_KEY),
+                        role_name: EnvUtils.getRequiredEnv(ROLE_NAME_ENV_VAR_KEY),
+                        region: EnvUtils.getRequiredEnv(REGION_ENV_VAR_KEY)
                 ]).toString())
 
         Request request = new Request.Builder()
-                .url(System.getenv(CERBERUS_URL_ENV_VAR_KEY) + '/v1/auth/iam-role')
+                .url(EnvUtils.getRequiredEnv(CERBERUS_URL_ENV_VAR_KEY) + '/v1/auth/iam-role')
                 .post(body)
                 .build()
         Response response = client.newCall(request).execute()

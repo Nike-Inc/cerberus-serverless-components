@@ -5,7 +5,7 @@ buildscript {
 }
 
 // load environment specific props from global and environment profiles
-def environment = project.hasProperty('env') ? project.'env' : 'global'
+def environment = project.hasProperty('env') ? project.'env' : 'dev'
 Properties props = new Properties()
 def globalProperties = new File("$project.projectDir/profile/global.properties")
 if (globalProperties.exists()) {

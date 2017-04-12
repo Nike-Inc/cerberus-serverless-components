@@ -6,6 +6,7 @@ import com.amazonaws.services.lambda.runtime.events.SNSEvent
 import com.amazonaws.services.s3.AmazonS3Client
 import com.fieldju.commons.EnvUtils
 import com.fieldju.commons.StringUtils
+import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
 import org.apache.log4j.Logger
 
@@ -37,31 +38,27 @@ class Handler {
 
             kinesis.putRecord(new PutRecordRequest()
                 .withStreamName(artemisStreamName)
-                .withData(ByteBuffer.wrap([
+                .withData(ByteBuffer.wrap(new JsonBuilder([
                     "metric": msg.metricKey,
                     "type": msg.metricType,
                     "value": msg.metricValue,
                     "cerberusKey": cerberusKey,
                     "dimensions": msg.dimensions,
                     "timestampMS": new Date().time
-                ].toString().bytes))
+                ]).toString().bytes))
+                .withPartitionKey(UUID.randomUUID().toString())
             )
         }
     }
 
     CerberusMetricMessage validateAndRetrieveMsg(SNSEvent.SNS sns) {
-        def subject = sns?.subject
-        if (! StringUtils.equals(subject, 'cerberus-metric')) {
-            log.info("Subject: ${subject} was not 'cerberus-metric' returning")
-            return null
-        }
         def serializedMsg = sns?.message
         if (StringUtils.isBlank(serializedMsg)) {
             log.error("The message: ${serializedMsg} was malformed")
             return null
         }
 
-        log.info("Received msg with subject: ${subject} and body: ${serializedMsg}")
+        log.info("Received msg with body: ${serializedMsg}")
 
         def deserializedMsg = new JsonSlurper().parseText(serializedMsg)
         if (! deserializedMsg instanceof CerberusMetricMessage) {

@@ -32,6 +32,7 @@ task deploy(type: MultiRegionPackageAndDeploySamTask) {
             '@@CODE_URI@@': "${project.buildDir}${File.separator}libs${File.separator}${project.getName()}-${version}.jar"
     ]
     parameterOverrides = [
+            ArtemisStreamArn: "${project.'artemis.kinesis_stream_arn'}",
             ArtemisStreamName: "${project.'artemis.kinesis_stream_name'}",
             ArtemisStreamRegion: "${project.'artemis.kinesis_stream_region'}",
             CerberusKey: "${project.'artemis.cerberus_key'}"
