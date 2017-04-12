@@ -1,4 +1,4 @@
-import com.fieldju.gradle.plugins.lambdasam.tasks.MultiRegionSamDeployTask
+import com.fieldju.gradle.plugins.lambdasam.tasks.MultiRegionDeploySamTask
 
 version = '1.0.0'
 
@@ -6,7 +6,7 @@ buildscript {
     apply from: file("${project.rootDir}/gradle/buildscript.gradle"), to: buildscript
 }
 
-task multiRegionDeploySam(type: MultiRegionSamDeployTask) {
+task multiRegionDeploySam(type: MultiRegionDeploySamTask ) {
     templatePath = "${project.projectDir}${File.separator}metrics-topic.yaml"
     regions = "${project.'cerberus.metric_topic_regions'}".split(/,/)
     stackName = "${project.name}"

@@ -84,6 +84,7 @@ src/main/resources/cloudformation/**
 # Ignore company specific props
 **/profile/*
 !**/profile/default.properties
+!**/profile/example.properties
 /profile/test.properties
 /profile/dev.properties
 /profile/prod.properties

@@ -2,15 +2,21 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
 Description: Lambda for processing events from the Cerberus metric topic
 Parameters:
-  CerberusMetricTopic:
+  ArtemisStreamName:
     Type: String
-    Description: The topic to subscribe too.
+    Description: The Artemis stream to send transformed metrics to.
+  ArtemisStreamRegion:
+    Type: String
+    Description: The Artemis stream region.
+  CerberusKey:
+    Type: String
+    Description: The Artemis Cerberus Key for looking up the API key to use.
 Resources:
   GroovyLambdaFunction:
     Type: 'AWS::Serverless::Function'
     Properties:
       Handler: >-
-         Handler::handle
+         Handler::handleSnsEvent
       Runtime: java8
       Description: Groovy Lambda Function
       MemorySize: 512
@@ -19,9 +25,14 @@ Resources:
       Role: !GetAtt LambdaRole.Arn
       Environment:
         Variables:
-          ROLE_NAME: !Ref LambdaRole
-          ACCOUNT_ID: !Ref AWS::AccountId
-          REGION: !Ref AWS::Region
+          ARTEMIS_STREAM_NAME: !Ref ArtemisStreamName
+          ARTEMIS_STREAM_REGION: !Ref ArtemisStreamRegion
+          CERBERUS_KEY: !Ref AWS::CerberusKey
+      Events:
+        CerberusMetricTopicEvent:
+          Type: SNS
+          Properties:
+            Topic: !ImportValue CerberusMetricsTopicARN
   LambdaRole:
     Type: "AWS::IAM::Role"
     Properties:

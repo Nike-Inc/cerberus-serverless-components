@@ -1,3 +1,5 @@
+import com.fieldju.gradle.plugins.lambdasam.tasks.MultiRegionPackageAndDeploySamTask
+
 version '1.0.0'
 
 shadowJar {
@@ -18,14 +20,22 @@ dependencies {
     testCompile 'junit:junit:4.12'
 }
 
-'aws-sam-deployer' {
-    region = project.'backup.region'
-    s3Bucket = project.'backup.lambda_artifact.s3_bucket'
-    s3Prefix = "${project.getName()}-artifact-uploads"
-    stackName = "${project.environment}-${project.'backup.stack_suffix'}-${project.getName()}"
-    samTemplatePath = "${project.projectDir}${File.separator}application.yaml"
+task deploy(type: MultiRegionPackageAndDeploySamTask) {
+    regions = "${project.'cerberus.metric_topic_regions'}".split(/,/)
+    stackName = "${project.name}"
+    templatePath = "${project.projectDir}${File.separator}sam.yaml"
+    // convert 'foo:bar,key:value' string into a Map<String, String>
+    regionToS3BucketMap = project.'cerberus.lambda_uploads_region_buckets'.split(/,/).collectEntries {
+        def kv = it.split(/:/); return [ "${kv[0]}": kv[1] ]
+    }
     tokenArtifactMap = [
             '@@CODE_URI@@': "${project.buildDir}${File.separator}libs${File.separator}${project.getName()}-${version}.jar"
     ]
-    parameterOverrides = [:]
+    parameterOverrides = [
+            ArtemisStreamName: "${project.'artemis.kinesis_stream_name'}",
+            ArtemisStreamRegion: "${project.'artemis.kinesis_stream_region'}",
+            CerberusKey: "${project.'artemis.cerberus_key'}"
+    ]
 }
+
+tasks.deploy.dependsOn 'shadowJar'

@@ -5,7 +5,7 @@ buildscript {
 }
 
 // load environment specific props from global and environment profiles
-def environment = project.hasProperty('env') ? project.'env' : 'default'
+def environment = project.hasProperty('env') ? project.'env' : 'global'
 Properties props = new Properties()
 def globalProperties = new File("$project.projectDir/profile/global.properties")
 if (globalProperties.exists()) {
@@ -69,6 +69,11 @@ subprojects {
                 runtimeClasspath += main.output + test.output
                 srcDir file('src/integration-test/java')
             }
+            groovy {
+                compileClasspath += main.output + test.output
+                runtimeClasspath += main.output + test.output
+                srcDir file('src/integration-test/groovy')
+            }
             resources.srcDir file('src/integration-test/resources')
         }
     }
@@ -96,6 +101,10 @@ subprojects {
         testLogging {
             showStandardStreams = true
         }
+    }
+    
+    dependencies {
+        compile 'com.fieldju:commons:1.0.0'
     }
 }
 

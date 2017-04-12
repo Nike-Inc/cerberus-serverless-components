@@ -1,4 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Creates a SNS Topic that is used to send Cerberus metrics and KPIs to, Cerberus operators can create Lambda's to process these messages if they desire to send them to places such as SingleFX
 
 Resources:
   CerberusMetricsSnsTopic:
@@ -11,6 +13,5 @@ Outputs:
   CerberusMetricsTopicARN:
     Description: A topic for sending Cerberus metrics to.
     Value: !Ref CerberusMetricsSnsTopic
-  CerberusMetricsTopicRegion:
-    Description: The region the topic was created in.
-    Value: !Ref AWS::Region
+    Export:
+      Name: CerberusMetricsTopicARN

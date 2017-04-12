@@ -12,6 +12,17 @@ This project contains the serverless components that can be used with Cerberus.
 * [Cerberus Cross Region Backup Lambda](cerberus-cross-region-backup-lambda/README.md) - Serverless function for for making complete backups of the data in Cerberus (CMS / Vault) and backing it up in a different region encrypted with KMS. With this function enabled, Cerberus operators can use the CLI to complete data restores in new regions or the original region.
 * [Cerberus Lambda VPC](cerberus-lambda-vpc/README.md) - Cloudformation to create a VPC with EIBs and NATs so that Cerberus operators can run lambdas with predictable IP addresses. The backup lambda should run in this VPC so that the IPs can be white listed to avoid rate limiting.
 
+## Profiles
+
+**Read this first**
+
+This project is configured to load properties from environment specific profiles. in [profile/](profile) 
+you will see an [example.properties](profile/example.properties). Before deploying any of this serverless components 
+you will need to create profiles for your desired environment. Create a global.properties and add all the global properties that are shared by all your environments. Then you can create your env specific props files such as dev.properties and prod.properties.
+Almost all the props will go into global. things such as `cerberus.url` will go into the env specific props file. 
+
+We keep our profiles in a separate repo and create soft links to the profile dir in this project and ignore then in the .gitignore file
+
 ## License
 
 This project is released under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0)

@@ -2,11 +2,10 @@ package com.nike.cerberus
 
 import com.amazonaws.services.kinesis.AmazonKinesisClient
 import com.amazonaws.services.kinesis.model.PutRecordRequest
-import com.amazonaws.services.lambda.runtime.events.S3Event
+import com.amazonaws.services.lambda.runtime.events.SNSEvent
 import com.amazonaws.services.s3.AmazonS3Client
-import com.amazonaws.services.s3.event.S3EventNotification
-import com.amazonaws.services.s3.model.GetObjectRequest
-import com.amazonaws.services.s3.model.S3Object
+import com.fieldju.commons.EnvUtils
+import com.fieldju.commons.StringUtils
 import groovy.json.JsonSlurper
 import org.apache.log4j.Logger
 
@@ -20,53 +19,60 @@ class Handler {
 
     Handler() {
         s3 = new AmazonS3Client()
-        kinesis = new AmazonKinesisClient()
+        kinesis = AmazonKinesisClient.builder().standard().withRegion(
+                EnvUtils.getRequiredEnv('ARTEMIS_STREAM_REGION', 'The Artemis Kinesis Stream region')
+        ).build() as AmazonKinesisClient
     }
 
-    def handleBackupMetadata(S3Event s3Event) {
-        def artemisStreamName = System.getenv('ARTEMIS_STREAM_NAME')
-        def cerberusKey = System.getenv('CERBERUS_KEY')
+    def handleSnsEvent(SNSEvent snsEvent) {
+        def artemisStreamName = EnvUtils.getRequiredEnv('ARTEMIS_STREAM_NAME', 'The Artemis Kinesis Stream')
+        def cerberusKey =  EnvUtils.getRequiredEnv('CERBERUS_KEY', 'The Cerberus key for looking up the Artemis API Key')
 
-        s3Event.records.each { S3EventNotification.S3EventNotificationRecord record ->
-            String bucketName = record.s3.bucket
-            String key = record.s3.object.key
+        snsEvent.records.each { record ->
 
-            if (! key.endsWith("metadata.json")) {
-                log.warn("Lambda triggered for ${bucketName}${key} skipping")
+            CerberusMetricMessage msg = validateAndRetrieveMsg(record.getSNS())
+            if (msg == null) {
                 return
             }
 
-            log.info("Processing backup metadata from ${bucketName}${key}")
-            S3Object metadataObject =  s3.getObject(new GetObjectRequest(bucketName, key))
-
-            Map metadata = new JsonSlurper().parse(metadataObject.getObjectContent()) as Map
-
-            // remove non metrics from map
-            String cerberusUrl = metadata.remove('cerberusUrl')
-            Date backupDate = metadata.remove('backupDate') as Date
-            String accountId = metadata.remove('accountId')
-            String backupRegion = metadata.remove('regionString')
-            String env = (cerberusUrl - 'http://').split(/\./)[0]
-
-            metadata.each { metricKey, metricValue ->
-                kinesis.putRecord(new PutRecordRequest()
-                        .withStreamName(artemisStreamName)
-                        .withData(ByteBuffer.wrap([
-                            "metric": metricKey,
-                            "type": "counter",
-                            "value": metricValue,
-                            "cerberusKey": cerberusKey,
-                            "dimensions": [
-                                    environment: env,
-                                    cerberusUrl: cerberusUrl,
-                                    backupDate: backupDate,
-                                    accountId: accountId,
-                                    backupRegion: backupRegion
-                            ],
-                            "timestampMS": backupDate.time
-                        ].toString().bytes))
-                )
-            }
+            kinesis.putRecord(new PutRecordRequest()
+                .withStreamName(artemisStreamName)
+                .withData(ByteBuffer.wrap([
+                    "metric": msg.metricKey,
+                    "type": msg.metricType,
+                    "value": msg.metricValue,
+                    "cerberusKey": cerberusKey,
+                    "dimensions": msg.dimensions,
+                    "timestampMS": new Date().time
+                ].toString().bytes))
+            )
         }
+    }
+
+    CerberusMetricMessage validateAndRetrieveMsg(SNSEvent.SNS sns) {
+        def subject = sns?.subject
+        if (! StringUtils.equals(subject, 'cerberus-metric')) {
+            log.info("Subject: ${subject} was not 'cerberus-metric' returning")
+            return null
+        }
+        def serializedMsg = sns?.message
+        if (StringUtils.isBlank(serializedMsg)) {
+            log.error("The message: ${serializedMsg} was malformed")
+            return null
+        }
+
+        log.info("Received msg with subject: ${subject} and body: ${serializedMsg}")
+
+        def deserializedMsg = new JsonSlurper().parseText(serializedMsg)
+        if (! deserializedMsg instanceof CerberusMetricMessage) {
+            log.error("The message: ${serializedMsg} was malformed")
+            return null
+        }
+        return deserializedMsg as CerberusMetricMessage
+    }
+
+    class CerberusMetricMessage {
+        String metricKey, metricValue, metricType
+        Map<String, String> dimensions = [:]
     }
 }
