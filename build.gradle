@@ -10,8 +10,15 @@ Properties props = new Properties()
 def globalProperties = new File("$project.projectDir/profile/global.properties")
 if (globalProperties.exists()) {
     props.load(new FileInputStream(globalProperties))
+} else {
+    logger.warn("${globalProperties.absolutePath} does not exit, no properties to load")
 }
-props.load(new FileInputStream("$project.projectDir/profile/${environment}.properties"))
+def envSpecificProps = new File("$project.projectDir/profile/${environment}.properties")
+if (envSpecificProps.exists()) {
+    props.load(new FileInputStream(globalProperties))
+} else {
+    logger.warn("${envSpecificProps.absolutePath} does not exit, no properties to load")
+}
 project.ext.set('environment', environment)
 props.each { prop ->
     if (project.hasProperty('log-profile-props') && project.'log-profile-props' == true) {
