@@ -1,7 +1,7 @@
 # Cerberus Metrics Topic
 
-This template creates an SNS topic that is used by various components to publish Cerberus metrics to, if enabled.
-This topic must be created in each region that you want to track metrics in.
+This template creates a SNS topic that is used by various components to publish Cerberus metric.
+This topic must be created in each region that metrics are tracked in.
 
 ## Messages
 Messages should conform to the following json schema, where dimensions is a k,v map

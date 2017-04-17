@@ -8,6 +8,6 @@ buildscript {
 
 task multiRegionDeploySam(type: MultiRegionDeploySamTask ) {
     templatePath = "${project.projectDir}${File.separator}metrics-topic.yaml"
-    regions = "${project.'cerberus.metric_topic_regions'}".split(/,/)
+    regions = getProfileProperty('cerberus.metric_topic_regions').split(/,/)
     stackName = "${project.name}"
 }

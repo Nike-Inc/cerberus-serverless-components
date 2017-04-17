@@ -27,19 +27,19 @@ dependencies {
 }
 
 'aws-sam-deployer' {
-    region = project.'backup.region'
-    s3Bucket = project.'backup.lambda_artifact.s3_bucket'
+    region = getProfileProperty('backup.region')
+    s3Bucket = getProfileProperty('backup.lambda_artifact.s3_bucket')
     s3Prefix = "${project.getName()}-artifact-uploads"
-    stackName = "${project.environment}-${project.'backup.stack_suffix'}-cerberus-cross-region-backup"
+    stackName = "${project.environment}-${getProfileProperty('backup.stack_suffix')}-cerberus-cross-region-backup"
     samTemplatePath = "${project.projectDir}${File.separator}application.yaml"
     tokenArtifactMap = [
             '@@CODE_URI@@': "${project.buildDir}${File.separator}libs${File.separator}${project.getName()}-${version}.jar"
     ]
     parameterOverrides = [
             Environment: project.environment,
-            CerberusUrl: project.'cerberus.url',
-            AdminUserArn: project.'cerberus.admin_user_arn',
-            SubnetIds: project.'backup.lambda_vpc.subnet_ids',
-            SecurityGroupIds: project.'backup.lambda_vpc.security_group_ids'
+            CerberusUrl: getProfileProperty('cerberus.url'),
+            AdminUserArn: getProfileProperty('cerberus.admin_user_arn'),
+            SubnetIds: getProfileProperty('backup.lambda_vpc.subnet_ids'),
+            SecurityGroupIds: getProfileProperty('backup.lambda_vpc.security_group_ids')
     ]
 }

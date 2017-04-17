@@ -21,21 +21,19 @@ dependencies {
 }
 
 task deploy(type: MultiRegionPackageAndDeploySamTask) {
-    regions = "${project.'cerberus.metric_topic_regions'}".split(/,/)
+    regions = getProfileProperty('cerberus.metric_topic_regions').split(/,/)
     stackName = "${project.name}"
     templatePath = "${project.projectDir}${File.separator}sam.yaml"
     // convert 'foo:bar,key:value' string into a Map<String, String>
-    regionToS3BucketMap = project.'cerberus.lambda_uploads_region_buckets'.split(/,/).collectEntries {
-        def kv = it.split(/:/); return [ "${kv[0]}": kv[1] ]
-    }
+    regionToS3BucketMap = getRegionBucketMap(getProfileProperty('cerberus.lambda_uploads_region_buckets'))
     tokenArtifactMap = [
             '@@CODE_URI@@': "${project.buildDir}${File.separator}libs${File.separator}${project.getName()}-${version}.jar"
     ]
     parameterOverrides = [
-            ArtemisStreamArn: "${project.'artemis.kinesis_stream_arn'}",
-            ArtemisStreamName: "${project.'artemis.kinesis_stream_name'}",
-            ArtemisStreamRegion: "${project.'artemis.kinesis_stream_region'}",
-            CerberusKey: "${project.'artemis.cerberus_key'}"
+            ArtemisStreamArn: getProfileProperty('artemis.kinesis_stream_arn'),
+            ArtemisStreamName: getProfileProperty('artemis.kinesis_stream_name'),
+            ArtemisStreamRegion: getProfileProperty('artemis.kinesis_stream_region'),
+            CerberusKey: getProfileProperty('artemis.cerberus_key')
     ]
 }
 

@@ -5,11 +5,11 @@ import org.junit.Test
 
 class HandlerIntegrationTest {
 
-    Handler handler
+    CerberusMetricsHandler handler
 
     @Before
     void before() {
-        handler = new Handler()
+        handler = new CerberusMetricsHandler()
     }
 
     @Test

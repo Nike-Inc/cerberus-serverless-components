@@ -12,13 +12,16 @@ import org.apache.log4j.Logger
 
 import java.nio.ByteBuffer
 
-class Handler {
+/**
+ * Processes messages from the Cerberus Metrics SNS Topic, transforming and submitting them to a Kinesis stream.
+ */
+class CerberusMetricsHandler {
 
     def log = Logger.getLogger(getClass())
     AmazonS3Client s3
     AmazonKinesisClient kinesis
 
-    Handler() {
+    CerberusMetricsHandler() {
         s3 = new AmazonS3Client()
         kinesis = AmazonKinesisClient.builder().standard().withRegion(
                 EnvUtils.getRequiredEnv('ARTEMIS_STREAM_REGION', 'The Artemis Kinesis Stream region')

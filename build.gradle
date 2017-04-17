@@ -27,6 +27,31 @@ props.each { prop ->
     project.ext.set(prop.key, prop.value)
 }
 
+Map<String, String> getRegionBucketMap(String serializedMap) {
+    List<String> keyValuePairs = serializedMap.split(/,/)
+    Map<String, String> regionBucketMap = [:]
+
+    keyValuePairs.each { kvPair ->
+        Collection kv = kvPair.split(/:/);
+        if (kv.size() == 2) {
+            String key = kv[0]
+            String value = kv[1]
+            regionBucketMap.put(key, value)
+        }
+    }
+
+    return regionBucketMap
+}
+
+String getProfileProperty(String key) {
+    if (project.hasProperty(key)) {
+        return project."${key}"
+    } else {
+        logger.warn("The project did not have extention property: ${key} for env: ${project.environment}, returning empty string")
+        return ''
+    }
+}
+
 subprojects {
     apply plugin: 'java'
     apply plugin: 'groovy'

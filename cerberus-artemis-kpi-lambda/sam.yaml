@@ -19,7 +19,7 @@ Resources:
     Type: 'AWS::Serverless::Function'
     Properties:
       Handler: >-
-         com.nike.cerberus.Handler::handleSnsEvent
+         com.nike.cerberus.CerberusMetricsHandler::handleSnsEvent
       Runtime: java8
       Description: Groovy Lambda Function
       MemorySize: 512
