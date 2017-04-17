@@ -5,16 +5,51 @@ buildscript {
 }
 
 // load environment specific props from global and environment profiles
-def environment = project.hasProperty('env') ? project.'env' : 'default'
+def environment = project.hasProperty('env') ? project.'env' : 'dev'
 Properties props = new Properties()
 def globalProperties = new File("$project.projectDir/profile/global.properties")
 if (globalProperties.exists()) {
     props.load(new FileInputStream(globalProperties))
+} else {
+    logger.warn("${globalProperties.absolutePath} does not exit, no properties to load")
 }
-props.load(new FileInputStream("$project.projectDir/profile/${environment}.properties"))
+def envSpecificProps = new File("$project.projectDir/profile/${environment}.properties")
+if (envSpecificProps.exists()) {
+    props.load(new FileInputStream(globalProperties))
+} else {
+    logger.warn("${envSpecificProps.absolutePath} does not exit, no properties to load")
+}
 project.ext.set('environment', environment)
 props.each { prop ->
+    if (project.hasProperty('log-profile-props') && project.'log-profile-props' == true) {
+        logger.lifecycle("Adding: { key='${prop.key}' value='${prop.value}' } to project ext")
+    }
     project.ext.set(prop.key, prop.value)
+}
+
+Map<String, String> getRegionBucketMap(String serializedMap) {
+    List<String> keyValuePairs = serializedMap.split(/,/)
+    Map<String, String> regionBucketMap = [:]
+
+    keyValuePairs.each { kvPair ->
+        Collection kv = kvPair.split(/:/);
+        if (kv.size() == 2) {
+            String key = kv[0]
+            String value = kv[1]
+            regionBucketMap.put(key, value)
+        }
+    }
+
+    return regionBucketMap
+}
+
+String getProfileProperty(String key) {
+    if (project.hasProperty(key)) {
+        return project."${key}"
+    } else {
+        logger.warn("The project did not have extention property: ${key} for env: ${project.environment}, returning empty string")
+        return ''
+    }
 }
 
 subprojects {
@@ -66,6 +101,11 @@ subprojects {
                 runtimeClasspath += main.output + test.output
                 srcDir file('src/integration-test/java')
             }
+            groovy {
+                compileClasspath += main.output + test.output
+                runtimeClasspath += main.output + test.output
+                srcDir file('src/integration-test/groovy')
+            }
             resources.srcDir file('src/integration-test/resources')
         }
     }
@@ -93,6 +133,10 @@ subprojects {
         testLogging {
             showStandardStreams = true
         }
+    }
+    
+    dependencies {
+        compile 'com.fieldju:commons:1.0.0'
     }
 }
 

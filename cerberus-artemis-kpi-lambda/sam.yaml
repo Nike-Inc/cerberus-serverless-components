@@ -1,0 +1,75 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: Lambda for processing events from the Cerberus metric topic
+Parameters:
+  ArtemisStreamName:
+    Type: String
+    Description: The Artemis stream to send transformed metrics to.
+  ArtemisStreamArn:
+    Type: String
+    Description: The Artemis stream Arn.
+  ArtemisStreamRegion:
+    Type: String
+    Description: The Artemis stream region.
+  CerberusKey:
+    Type: String
+    Description: The Artemis Cerberus Key for looking up the API key to use.
+Resources:
+  GroovyLambdaFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: >-
+         com.nike.cerberus.CerberusMetricsHandler::handleSnsEvent
+      Runtime: java8
+      Description: Groovy Lambda Function
+      MemorySize: 512
+      Timeout: 300
+      CodeUri: @@CODE_URI@@
+      Role: !GetAtt LambdaRole.Arn
+      Environment:
+        Variables:
+          ARTEMIS_STREAM_NAME: !Ref ArtemisStreamName
+          ARTEMIS_STREAM_REGION: !Ref ArtemisStreamRegion
+          CERBERUS_KEY: !Ref CerberusKey
+      Events:
+        CerberusMetricTopicEvent:
+          Type: SNS
+          Properties:
+            Topic: !ImportValue CerberusMetricsTopicARN
+  LambdaRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: "/"
+      Policies:
+        -
+          PolicyName: "allow-lambda-to-use-logs-policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: "Allow"
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "*"
+        -
+          PolicyName: "allow-lambda-to-put-messages-in-artemis-stream"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: "Allow"
+                Action:
+                  - kinesis:PutRecord
+                Resource: !Ref ArtemisStreamArn

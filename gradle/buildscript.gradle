@@ -4,6 +4,6 @@ repositories {
 }
 dependencies {
     classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.3'
-    classpath "gradle.plugin.com.fieldju:gradle-aws-sam-deployer-plugin:1.2.0"
+    classpath "gradle.plugin.com.fieldju:gradle-aws-sam-deployer-plugin:1.5.2"
     classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.6.3'
 }
