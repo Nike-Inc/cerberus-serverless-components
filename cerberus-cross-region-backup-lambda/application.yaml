@@ -33,7 +33,7 @@ Resources:
         Timer:
           Type: Schedule
           Properties:
-            Schedule: rate(60 minutes)
+            Schedule: cron(7 * * * ? *)
       Environment:
         Variables:
           ROLE_NAME: !Ref CerberusCrossRegionBackupRole

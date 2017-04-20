@@ -15,15 +15,12 @@ if (globalProperties.exists()) {
 }
 def envSpecificProps = new File("$project.projectDir/profile/${environment}.properties")
 if (envSpecificProps.exists()) {
-    props.load(new FileInputStream(globalProperties))
+    props.load(new FileInputStream(envSpecificProps))
 } else {
     logger.warn("${envSpecificProps.absolutePath} does not exit, no properties to load")
 }
 project.ext.set('environment', environment)
 props.each { prop ->
-    if (project.hasProperty('log-profile-props') && project.'log-profile-props' == true) {
-        logger.lifecycle("Adding: { key='${prop.key}' value='${prop.value}' } to project ext")
-    }
     project.ext.set(prop.key, prop.value)
 }
 
@@ -136,7 +133,7 @@ subprojects {
     }
     
     dependencies {
-        compile 'com.fieldju:commons:1.0.0'
+        compile 'com.fieldju:commons:1.0.1'
     }
 }
 
