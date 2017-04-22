@@ -19,8 +19,7 @@ dependencies {
     compile 'com.squareup.okhttp3:okhttp:3.6.0'
     compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.5'
     compile 'org.jtwig:jtwig-core:5.85.3.RELEASE'
-
-    testCompile 'junit:junit:4.12'
+    compile 'junit:junit:4.12'
 }
 
 task deploy(type: MultiRegionPackageAndDeploySamTask) {

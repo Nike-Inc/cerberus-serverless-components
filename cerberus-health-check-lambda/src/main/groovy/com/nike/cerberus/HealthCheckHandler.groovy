@@ -22,6 +22,8 @@ import org.jtwig.JtwigTemplate
 import java.nio.ByteBuffer
 import java.util.concurrent.TimeUnit
 
+import static org.junit.Assert.*
+
 /**
  * Entry point for the health check Lambda
  */
@@ -125,8 +127,7 @@ class HealthCheckHandler {
             Response response = client.newCall(request).execute()
             def bodyString = response.body().string()
 
-            assert response.code() == 200 : "Failed to get a 200 while authenticating, code: " +
-                    "${response.code()}, body: ${bodyString}"
+            assertEquals("Failed to get a 200 while authenticating, code: ${response.code()}, body: ${bodyString}", 200, response.code())
 
             def authPayload = new JsonSlurper().parseText(bodyString)
 
@@ -137,7 +138,7 @@ class HealthCheckHandler {
             def authData = new JsonSlurper().parseText(respString)
 
             String authToken = authData?.client_token
-            assert StringUtils.isNotBlank(authToken) : 'The auth token should not be blank'
+            assertTrue('The auth token should not be blank', StringUtils.isNotBlank(authToken))
             return authToken
         } catch (Throwable t) {
             log.error("Failed to authenticate with Cerberus, retryCount: ${retryCount}", t)
@@ -167,9 +168,10 @@ class HealthCheckHandler {
             Response response = client.newCall(request).execute()
             def resp = new JsonSlurper().parseText(response.body().string())
             String actualHealthCheckValue = resp?.data?."${healthCheckValueKey}"
-            assert expectedHealthCheckValue == actualHealthCheckValue :
-                    "The actual value for key: ${healthCheckValueKey} in response: ${new JsonBuilder(resp).toString()} " +
-                            "was not the expected value: ${expectedHealthCheckValue}"
+
+            assertEquals("The actual value for key: ${healthCheckValueKey} in response: ${new JsonBuilder(resp).toString()} " +
+                    "was not the expected value: ${expectedHealthCheckValue}", expectedHealthCheckValue, actualHealthCheckValue)
+
         } catch (Throwable t) {
             log.error("Failed to fetch and validate health check value, retryCount: ${retryCount}", t)
             if (retryCount < FETCH_AND_VALIDATE_RETRY_LIMIT) {
