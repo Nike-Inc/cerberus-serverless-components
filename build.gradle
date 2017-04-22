@@ -133,7 +133,7 @@ subprojects {
     }
     
     dependencies {
-        compile 'com.fieldju:commons:1.0.1'
+        compile 'com.fieldju:commons:1.1.0'
     }
 }
 
