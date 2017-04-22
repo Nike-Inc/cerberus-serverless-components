@@ -36,13 +36,15 @@ class HealthCheckHandler {
 
     private static Logger log = Logger.getLogger(getClass())
 
-    String healthCheckPath = 'unknown'
-    String healthCheckValueKey = 'unknown'
-    String expectedHealthCheckValue = 'unknown'
-    String cerberusEnvironment = 'unknown'
-    String region = 'unknown'
-
     def runHealthCheck() {
+        String healthCheckPath = 'unknown'
+        String healthCheckValueKey = 'unknown'
+        String expectedHealthCheckValue = 'unknown'
+        String cerberusEnvironment = 'unknown'
+        String region = 'unknown'
+        int authRetryCount = 0
+        int fetchRetryCount = 0
+
         try {
             log.info 'Checking for required environmental Variables'
             String cerberusUrl = EnvUtils.getRequiredEnv('CERBERUS_URL')
@@ -66,18 +68,20 @@ class HealthCheckHandler {
 
             // Authenticating
             log.info 'Authenticating with Cerberus'
-            String authToken = authenticate(kmsClient, client, cerberusUrl, accountId, roleName, region)
+            String authToken = authenticate(kmsClient, client, cerberusUrl, accountId, roleName, region, authRetryCount)
 
             // Fetching and validating health check value
             log.info 'Fetching health check value from cerberus'
-            fetchAndValidateHealthCheckValue(client, authToken, cerberusUrl, healthCheckPath, healthCheckValueKey, expectedHealthCheckValue)
+            fetchAndValidateHealthCheckValue(client, authToken, cerberusUrl, healthCheckPath, healthCheckValueKey, expectedHealthCheckValue, fetchRetryCount)
             return success([
                     environment: cerberusEnvironment,
                     status: 'healthy',
                     healthCheckPath: healthCheckPath,
                     healthCheckValueKey: healthCheckValueKey,
                     expectedHealthCheckValue: expectedHealthCheckValue,
-                    region: region
+                    region: region,
+                    authRetryCount: authRetryCount,
+                    fetchRetryCount: fetchRetryCount
             ])
         } catch (Throwable t) {
             return error([
@@ -87,6 +91,8 @@ class HealthCheckHandler {
                     healthCheckValueKey: healthCheckValueKey,
                     expectedHealthCheckValue: expectedHealthCheckValue,
                     region: region,
+                    authRetryCount: authRetryCount,
+                    fetchRetryCount: fetchRetryCount,
                     error: true,
                     throwableMessage: ExceptionUtils.getMessage(t),
                     throwableMessageStacktrace: ExceptionUtils.getStackTrace(t)
@@ -100,7 +106,7 @@ class HealthCheckHandler {
                                 String accountId,
                                 String roleName,
                                 String region,
-                                int retryCount = 0) {
+                                int retryCount) {
 
         try {
             MediaType JSON = MediaType.parse("application/json; charset=utf-8")
@@ -134,6 +140,7 @@ class HealthCheckHandler {
             assert StringUtils.isNotBlank(authToken) : 'The auth token should not be blank'
             return authToken
         } catch (Throwable t) {
+            log.error("Failed to authenticate with Cerberus, retryCount: ${retryCount}", t)
             if (retryCount < AUTH_RETRY_LIMIT) {
                 sleep(AUTH_RETRY_SLEEP_IN_MILLI_SECONDS)
                 return authenticate(kmsClient, client, cerberusUrl, accountId, roleName, region, retryCount + 1)
@@ -148,7 +155,7 @@ class HealthCheckHandler {
                                                   String healthCheckPath,
                                                   String healthCheckValueKey,
                                                   String expectedHealthCheckValue,
-                                                  int retryCount = 0) {
+                                                  int retryCount) {
 
         try {
             Request request = new Request.Builder()
@@ -164,6 +171,7 @@ class HealthCheckHandler {
                     "The actual value for key: ${healthCheckValueKey} in response: ${new JsonBuilder(resp).toString()} " +
                             "was not the expected value: ${expectedHealthCheckValue}"
         } catch (Throwable t) {
+            log.error("Failed to fetch and validate health check value, retryCount: ${retryCount}", t)
             if (retryCount < FETCH_AND_VALIDATE_RETRY_LIMIT) {
                 sleep(FETCH_AND_VALIDATE_RETRY_SLEEP_IN_MILLI_SECONDS)
                 fetchAndValidateHealthCheckValue(client, authToken, cerberusUrl, healthCheckPath,

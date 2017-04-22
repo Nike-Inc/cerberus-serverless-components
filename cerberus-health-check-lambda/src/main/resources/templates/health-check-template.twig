@@ -46,6 +46,8 @@
         <h2>Environment: {{ environment }}</h2>
         <h2 class="{{ status }}">Status: {{ status }}</h2>
         <h2>Region tested From: {{ region }}</h2>
+        <h3>Authentication Retries: {{ authRetryCount }}</h3>
+        <h3>Healthcheck Node Fetch Retries: {{ fetchRetryCount }}</h3>
         <h3>HEALTH_CHECK_VALUE_PATH: {{ healthCheckPath }}</h3>
         <h3>HEALTH_CHECK_VALUE_KEY: {{ healthCheckValueKey }}</h3>
         <h3>EXPECTED_HEALTH_CHECK_VALUE: {{ expectedHealthCheckValue }}</h3>
