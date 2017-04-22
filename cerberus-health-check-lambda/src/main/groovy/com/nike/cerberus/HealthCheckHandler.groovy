@@ -21,6 +21,7 @@ import org.jtwig.JtwigTemplate
 
 import java.nio.ByteBuffer
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 
 import static org.junit.Assert.*
 
@@ -44,8 +45,8 @@ class HealthCheckHandler {
         String expectedHealthCheckValue = 'unknown'
         String cerberusEnvironment = 'unknown'
         String region = 'unknown'
-        int authRetryCount = 0
-        int fetchRetryCount = 0
+        def authRetryCount = 'unknown'
+        def fetchRetryCount = 'unknown'
 
         try {
             log.info 'Checking for required environmental Variables'
@@ -70,11 +71,14 @@ class HealthCheckHandler {
 
             // Authenticating
             log.info 'Authenticating with Cerberus'
-            String authToken = authenticate(kmsClient, client, cerberusUrl, accountId, roleName, region, authRetryCount)
+            def authWrapper = authenticate(kmsClient, client, cerberusUrl, accountId, roleName, region)
+            def authToken = authWrapper.authToken
+            authRetryCount = authWrapper.authRetryCount
 
             // Fetching and validating health check value
             log.info 'Fetching health check value from cerberus'
-            fetchAndValidateHealthCheckValue(client, authToken, cerberusUrl, healthCheckPath, healthCheckValueKey, expectedHealthCheckValue, fetchRetryCount)
+            fetchRetryCount = fetchAndValidateHealthCheckValue(client, authToken, cerberusUrl, healthCheckPath, healthCheckValueKey, expectedHealthCheckValue)
+            log.info("Successfully validated Cerberus Health")
             return success([
                     environment: cerberusEnvironment,
                     status: 'healthy',
@@ -102,13 +106,13 @@ class HealthCheckHandler {
         }
     }
 
-    private String authenticate(AWSKMS kmsClient,
+    private def authenticate(AWSKMS kmsClient,
                                 OkHttpClient client,
                                 String cerberusUrl,
                                 String accountId,
                                 String roleName,
                                 String region,
-                                int retryCount) {
+                                int retryCount = 0) {
 
         try {
             MediaType JSON = MediaType.parse("application/json; charset=utf-8")
@@ -139,7 +143,10 @@ class HealthCheckHandler {
 
             String authToken = authData?.client_token
             assertTrue('The auth token should not be blank', StringUtils.isNotBlank(authToken))
-            return authToken
+            return [
+                    authToken: authToken,
+                    authRetryCount: retryCount
+            ]
         } catch (Throwable t) {
             log.error("Failed to authenticate with Cerberus, retryCount: ${retryCount}", t)
             if (retryCount < AUTH_RETRY_LIMIT) {
@@ -150,13 +157,13 @@ class HealthCheckHandler {
         }
     }
 
-    private void fetchAndValidateHealthCheckValue(OkHttpClient client,
+    private int fetchAndValidateHealthCheckValue(OkHttpClient client,
                                                   String authToken,
                                                   String cerberusUrl,
                                                   String healthCheckPath,
                                                   String healthCheckValueKey,
                                                   String expectedHealthCheckValue,
-                                                  int retryCount) {
+                                                  int retryCount = 0) {
 
         try {
             Request request = new Request.Builder()
@@ -169,9 +176,10 @@ class HealthCheckHandler {
             def resp = new JsonSlurper().parseText(response.body().string())
             String actualHealthCheckValue = resp?.data?."${healthCheckValueKey}"
 
-            assertEquals("The actual value for key: ${healthCheckValueKey} in response: ${new JsonBuilder(resp).toString()} " +
+            assertEquals("The actual value for key: ${healthCheckValueKey} in response: \n${new JsonBuilder(resp).toPrettyString()}\n " +
                     "was not the expected value: ${expectedHealthCheckValue}", expectedHealthCheckValue, actualHealthCheckValue)
 
+            return retryCount
         } catch (Throwable t) {
             log.error("Failed to fetch and validate health check value, retryCount: ${retryCount}", t)
             if (retryCount < FETCH_AND_VALIDATE_RETRY_LIMIT) {
@@ -209,6 +217,7 @@ class HealthCheckHandler {
             JtwigModel model = JtwigModel.newModel(data)
             return template.render(model)
         } catch (Throwable t) {
+            log.error("Failed to render template", t)
             return "${data}"
         }
     }
