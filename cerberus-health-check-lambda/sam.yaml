@@ -1,0 +1,67 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: Simple IAM Principal auth and secret read health check for Cerberus
+Parameters:
+  CerberusUrl:
+    Type: String
+    Description: The Cerberus API to test.
+  CerberusEnvironment:
+    Type: String
+    Description: The Cerberus environment.
+
+Resources:
+
+  # Health check Lambda function
+  CerberusHealthCheckFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: >-
+         com.nike.cerberus.HealthCheckHandler::runHealthCheck
+      Runtime: java8
+      Description: Cerberus Health Check
+      MemorySize: 512
+      Timeout: 300
+      CodeUri: @@CODE_URI@@
+      Role: !GetAtt CerberusHealthCheckRole.Arn
+      Environment:
+        Variables:
+          ROLE_NAME: !Ref CerberusHealthCheckRole
+          ACCOUNT_ID: !Ref AWS::AccountId
+          REGION: !Ref AWS::Region
+          CERBERUS_URL: !Ref CerberusUrl
+          ENVIRONMENT: !Ref CerberusEnvironment
+      Events:
+        GetResource:
+          Type: Api
+          Properties:
+            Path: /healthcheck
+            Method: GET
+
+  # IAM Role for Lambda
+  CerberusHealthCheckRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: "/"
+      Policies:
+        -
+          PolicyName: "allow-lambda-to-use-logs-policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: "Allow"
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "*"

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cerberus Health Check</title>
+    <style>
+        body {
+            background-color: #222222;
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        #content-wrapper {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-flow: column;
+        }
+
+        #content {
+            color: #F7F7F7;
+        }
+
+        .healthy {
+            color: green;
+        }
+
+        .unhealthy {
+            color: red;
+        }
+
+        #error-wrapper {
+            max-width: 1000px;
+        }
+    </style>
+</head>
+<body>
+<div id="content-wrapper">
+    <div id="content">
+        <h1>Cerberus Health Check</h1>
+        <h2>Environment: {{ environment }}</h2>
+        <h2 class="{{ status }}">Status: {{ status }}</h2>
+        <h2>Region tested From: {{ region }}</h2>
+        <h3>Authentication Retries: {{ authRetryCount }}</h3>
+        <h3>Healthcheck Node Fetch Retries: {{ fetchRetryCount }}</h3>
+        <h3>HEALTH_CHECK_VALUE_PATH: {{ healthCheckPath }}</h3>
+        <h3>HEALTH_CHECK_VALUE_KEY: {{ healthCheckValueKey }}</h3>
+        <h3>EXPECTED_HEALTH_CHECK_VALUE: {{ expectedHealthCheckValue }}</h3>
+        {% if error %}
+        <div id="error-wrapper">
+            <h4>Message:</h4>
+            <pre>{{ throwableMessage }}</pre>
+            <h4>Stacktrace:</h4>
+            <pre>{{ throwableMessageStacktrace }}</pre>
+        </div>
+        {% endif %}
+    </div>
+</div>
+</body>
+</html>
