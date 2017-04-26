@@ -65,3 +65,17 @@ Resources:
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                 Resource: "*"
+
+Outputs:
+  HealthCheckEndpoint:
+    Description: The health check endpoint
+    Value: !Join
+      - ''
+      - - https://
+        - !Ref ServerlessRestApi
+        - '.execute-api.'
+        - !Ref 'AWS::Region'
+        - '.amazonaws.com/Prod/healthcheck'
+  HealthCheckIamRoleArn:
+    Description: The IAM role to add to the health check bucket
+    Value: !GetAtt CerberusHealthCheckRole.Arn

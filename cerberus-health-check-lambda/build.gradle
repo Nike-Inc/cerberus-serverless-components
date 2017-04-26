@@ -34,6 +34,7 @@ task deploy(type: MultiRegionPackageAndDeploySamTask) {
             CerberusUrl: getProfileProperty('cerberus.url'),
             CerberusEnvironment: "${project.environment}"
     ]
+    logStackOutputs = true
 }
 
 tasks.deploy.dependsOn 'shadowJar'
