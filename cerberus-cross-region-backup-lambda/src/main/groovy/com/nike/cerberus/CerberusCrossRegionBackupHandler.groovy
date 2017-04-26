@@ -148,7 +148,7 @@ class CerberusCrossRegionBackupHandler {
             dimensions.put('cerberusUrl', "${metadata.remove('cerberusUrl')}")
             dimensions.put('lambdaBackupAccountId', "${metadata.remove('lambdaBackupAccountId')}")
             dimensions.put('lambdaBackupRegion', "${metadata.remove('lambdaBackupRegion')}")
-            dimensions.put('environment', EnvUtils.getRequiredEnv('ENVIRONMENT'))
+            dimensions.put('environment', "cerberus-${EnvUtils.getRequiredEnv('ENVIRONMENT').toLowerCase()}")
 
             metadata.each { metric ->
                 sns.publish(topicArn, new JsonBuilder([
