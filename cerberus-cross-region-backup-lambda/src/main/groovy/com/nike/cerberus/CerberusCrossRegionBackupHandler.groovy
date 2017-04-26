@@ -146,7 +146,6 @@ class CerberusCrossRegionBackupHandler {
 
             Map<String, String> dimensions = [:]
             dimensions.put('cerberusUrl', "${metadata.remove('cerberusUrl')}")
-            dimensions.put('backupDate', "${metadata.remove('backupDate')}")
             dimensions.put('lambdaBackupAccountId', "${metadata.remove('lambdaBackupAccountId')}")
             dimensions.put('lambdaBackupRegion', "${metadata.remove('lambdaBackupRegion')}")
             dimensions.put('environment', EnvUtils.getRequiredEnv('ENVIRONMENT'))
