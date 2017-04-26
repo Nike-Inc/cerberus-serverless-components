@@ -8,6 +8,7 @@ This project contains the serverless components that can be used with Cerberus.
 
 ## Serverless Components
 
+* [Cerberus Health Check](cerberus-health-check/README.md) - A small serverless API that authenticates and reads a secret from cerberus.
 * [Cerberus Artemis KPI Lambda](cerberus-artemis-kpi-lambda/README.md) - Reference Example function for processing Cerberus metrics from the metrics topic
 * [Cerberus CloudFront Lambda](cerberus-cloudfront-lambda/README.md) - Serverless function for processing CloudFront log events, to enable things such as rate limiting and optionally Google Analytics KPI tracking
 * [Cerberus Cross Region Backup Lambda](cerberus-cross-region-backup-lambda/README.md) - Serverless function for for making complete backups of the data in Cerberus (CMS / Vault) and backing it up in a different region encrypted with KMS. With this function enabled, Cerberus operators can use the CLI to complete data restores in new regions or the original region.
