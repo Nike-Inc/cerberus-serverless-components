@@ -103,11 +103,19 @@ class CerberusCrossRegionBackupHandler {
         String authToken = getCerberusToken(kmsClient, client)
         String adminReadToken = getAdminReadToken(authToken, client)
 
+        validateToken(adminReadToken, client)
+
         log.info 'Backing up data from Cerberus'
         def now = new Date()
         String prefix = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(now)
         List<LazyMap> sdbMetadataList = getSDBMetaData(client, authToken)
 
+        def sdbCount = sdbMetadataList.size()
+        if (sdbCount < 1) {
+            throw new RuntimeException("CMS returned no data when listing SDB metadata")
+        } else {
+            log.info("CMS returned that there are ${sdbMetadataList.size()} SDBs to back up.")
+        }
 
         MetaObject metaObject = new MetaObject()
         for (def sdb : sdbMetadataList) {
@@ -136,6 +144,20 @@ class CerberusCrossRegionBackupHandler {
         log.info("Saving metadata: ${metadata} to ${prefix}/${key}")
         saveDataToS3(s3EncryptionClient, metadata, backupBucket, prefix, key)
         trackMetadataMetrics(metadata)
+
+        if (metadata.numberOfKeyValuePairs < 1) {
+            throw new RuntimeException("The number of backed up key value pairs was less than 1, this probably means something bad is going on")
+        }
+    }
+
+    /**
+     * Validate that the token fetched from the SDB is valid and can list the children nodes from the root node.
+     */
+    void validateToken(String token, OkHttpClient client) {
+        def keys = getKeys(client, null, token)
+        if (keys.size() < 1) {
+            throw new IllegalStateException("The token provided failed to return any data when listing for the root node")
+        }
     }
 
     void trackMetadataMetrics(Map metadata) {
@@ -223,6 +245,11 @@ class CerberusCrossRegionBackupHandler {
                     .build()
 
             Response response = client.newCall(request).execute()
+
+            if (response.code() != 200) {
+                throw new RuntimeException("Failed to get metadata from Cerberus. Code: ${response.code()}, Msg: ${response.body().string()}")
+            }
+
             def resp = new JsonSlurper().parseText(response.body().string())
 
             resp.'safe_deposit_box_metadata'.each { Map sdbMetaData ->
@@ -271,7 +298,7 @@ class CerberusCrossRegionBackupHandler {
                     new HttpUrl.Builder()
                             .scheme(baseUrl.protocol)
                             .host(baseUrl.host)
-                            .addPathSegments("/v1/secret/${path}")
+                            .addPathSegments(path ? "/v1/secret/${path}" : '/v1/secret/')
                             .addQueryParameter('list', 'true')
                             .build()
                 )
