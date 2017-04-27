@@ -387,6 +387,11 @@ class CerberusCrossRegionBackupHandler {
                 .post(body)
                 .build()
         Response response = client.newCall(request).execute()
+
+        if (response.code() != 200) {
+            throw new RuntimeException("Failed to authenticate with Cerberus. Code: ${response.code()}, Msg: ${response.body().string()}")
+        }
+
         def authPayload = new JsonSlurper().parseText(response.body().string())
 
         String encryptedAuthData = authPayload.auth_data
