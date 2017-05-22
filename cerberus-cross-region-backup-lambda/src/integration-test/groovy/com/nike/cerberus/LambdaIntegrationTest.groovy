@@ -16,7 +16,7 @@
 
 package com.nike.cerberus
 
-import com.nike.cerberus.util.EnvVarUtils
+import com.fieldju.commons.EnvUtils
 import org.junit.Before
 import org.junit.Test
 
@@ -27,8 +27,8 @@ class LambdaIntegrationTest {
     @Before
     public void before() {
         handler = new CerberusCrossRegionBackupHandler(String.format("arn:aws:iam::%s:role/%s",
-                EnvVarUtils.getRequiredEnvVar(CerberusCrossRegionBackupHandler.ACCOUNT_ID_ENV_VAR_KEY),
-                EnvVarUtils.getRequiredEnvVar(CerberusCrossRegionBackupHandler.ROLE_NAME_ENV_VAR_KEY)))
+                EnvUtils.getRequiredEnv(CerberusCrossRegionBackupHandler.ACCOUNT_ID_ENV_VAR_KEY),
+                EnvUtils.getRequiredEnv(CerberusCrossRegionBackupHandler.ROLE_NAME_ENV_VAR_KEY)))
     }
 
     @Test
