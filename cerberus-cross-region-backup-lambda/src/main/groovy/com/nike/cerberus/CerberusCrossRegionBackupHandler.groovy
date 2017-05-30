@@ -140,14 +140,14 @@ class CerberusCrossRegionBackupHandler {
                 numberOfUniqueIamRoles: metaObject.uniqueIamRoles.size(),
                 numberOfUniqueNonOwnerGroups: metaObject.uniqueNonOwnerGroups.size()
         ]
+        if (metadata.numberOfKeyValuePairs < 1) {
+            throw new RuntimeException("The number of backed up key value pairs was less than 1, this probably means something bad is going on")
+        }
+
         def key = "cerberus-backup-metadata.json"
         log.info("Saving metadata: ${metadata} to ${prefix}/${key}")
         saveDataToS3(s3EncryptionClient, metadata, backupBucket, prefix, key)
         trackMetadataMetrics(metadata)
-
-        if (metadata.numberOfKeyValuePairs < 1) {
-            throw new RuntimeException("The number of backed up key value pairs was less than 1, this probably means something bad is going on")
-        }
     }
 
     /**
