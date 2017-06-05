@@ -11,6 +11,10 @@ First Time:
 1. Ensure to generate new CMS config adding the IAM Role ARN for the IAM Role generated from the stack created by the above command adding it to the cms.admin.roles -P prop ex: `-Pcms.admin.roles=arn:aws:iam::111111111:role/test-cerberus-cross-regio-CerberusCrossRegionBacku-1W93J2KE1BUKJ`
 1. Grab the root token using the CLI `cerberus -e foo -r us-west-2 view-config --config-path config/secrets.json`
 1. Inside the target envrinments Cerberus Management Dashboard create an sdb called `cerberus cross region backup lambda` and a new vault path call `config` add the root token at the following key: `root_token`
+1. In the AWS console take not of the IAM role ARN that was created by the stack for the backup lambda. This will be under stack resources.
+1. Add the IAM Role ARN to the `cerberus cross region backup lambda` you created above with read permissions
+1. Add the IAM Role ARN to the CMS properties as an admin role, ex `cerberus -e foo -r bar update-cms-config -Pcms.admin.roles=arn::xxxxxxxxxxxx`
+1. Perform a rolling restart of CMS, you can do this safely with the CLI `cerberus -e foo -r bar --proxy-type SOCKS --proxy-host localhost --proxy-port 9000 reboot-cluster --stack-name CMS`
 
 Notes: if you use us-east as your primary region then you probably dont want your backup in us-east and will need to modify the cloud formation to create your lambda vpc in a different region. You will probably want at least 2 AZ's for your lambda VPC
 
