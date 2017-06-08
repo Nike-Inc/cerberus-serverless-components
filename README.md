@@ -20,7 +20,7 @@ This project contains the serverless components that can be used with Cerberus.
 **Read this first**
 
 This project is configured to load properties from environment specific profiles. in the [profile/ directory](profile) 
-there is [example.properties](profile/example.properties), an example profile. Before deploying any of this serverless components 
+there is [example.properties](profile/example.properties), an example profile. Before deploying any of these serverless components 
 you will need to create profiles for your desired environment. 
 
 1. Create a file named `global.properties` in the `profile` directory, and add all the global properties that are shared by all your environments. 
@@ -28,7 +28,7 @@ you will need to create profiles for your desired environment.
 1. Create your environment specific props files such as dev.properties and prod.properties.
     - Properties such as `cerberus.url` will go into the env specific props file.
 
-We keep our profiles in a separate repo and create soft links to the profile dir in this project and ignore then in the .gitignore file
+We keep our profiles in a separate repo and create soft links to the profile dir in this project, and ignore them in the .gitignore file
 
 ## License
 
