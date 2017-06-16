@@ -1,0 +1,15 @@
+import com.fieldju.gradle.plugins.lambdasam.tasks.DeploySamTask
+
+version = '1.0.0'
+
+buildscript {
+    apply from: file("${project.rootDir}/gradle/buildscript.gradle"), to: buildscript
+}
+
+task deploy(type: DeploySamTask) {
+    stackName = "${project.name}"
+    templatePath = "${project.projectDir}${File.separator}admin-iam-role.yaml"
+    logStackOutputs = true
+    parameterOverrides = [ AdminUserArn: getProfileProperty('cerberus.admin_user_arn') ]
+    region = getProfileProperty('admin_iam_role.region')
+}
