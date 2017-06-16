@@ -8,9 +8,6 @@ Parameters:
   CerberusUrl:
     Type: String
     Description: The url for the cerberus environment
-  AdminUserArn:
-    Type: String
-    Description: The arn for the admin user
   SubnetIds:
     Type: CommaDelimitedList
     Description: Comma-separated VPC subnet Ids to add
@@ -28,7 +25,7 @@ Resources:
       MemorySize: 512
       Timeout: 300
       CodeUri: @@CODE_URI@@
-      Role: !GetAtt CerberusCrossRegionBackupRole.Arn
+      Role: !ImportValue CerberusAdminIamRoleARN
       Events:
         Timer:
           Type: Schedule
@@ -36,7 +33,7 @@ Resources:
             Schedule: cron(7 * * * ? *)
       Environment:
         Variables:
-          ROLE_NAME: !Ref CerberusCrossRegionBackupRole
+          ROLE_NAME: !ImportValue CerberusAdminIamRole
           ACCOUNT_ID: !Ref AWS::AccountId
           REGION: !Ref AWS::Region
           BUCKET: !Ref CerberusCrossRegionBackupS3Bucket
@@ -47,68 +44,6 @@ Resources:
       VpcConfig:
         SubnetIds: !Ref SubnetIds
         SecurityGroupIds: !Ref SecurityGroupIds
-  CerberusCrossRegionBackupRole:
-    Type: "AWS::IAM::Role"
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          -
-            Effect: "Allow"
-            Principal:
-              # allow admin for integration testing
-              AWS:
-                - !Ref AdminUserArn
-              Service:
-                - "lambda.amazonaws.com"
-            Action:
-              - "sts:AssumeRole"
-      Path: "/"
-      Policies:
-        -
-          PolicyName: "network-inf-policy"
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              -
-                Effect: "Allow"
-                Action:
-                  - ec2:DescribeNetworkInterfaces
-                  - ec2:CreateNetworkInterface
-                  - ec2:DeleteNetworkInterface
-                Resource: "*"
-        -
-          PolicyName: "logs-policy"
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              -
-                Effect: "Allow"
-                Action:
-                  - logs:CreateLogGroup
-                  - logs:CreateLogStream
-                  - logs:PutLogEvents
-                Resource: "*"
-        -
-          PolicyName: "cerberus-policy"
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              -
-                Effect: "Allow"
-                Action:
-                  - kms:Decrypt
-                Resource: "*"
-        -
-          PolicyName: "track-metrics"
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              -
-                Effect: "Allow"
-                Action:
-                  - SNS:Publish
-                Resource: !ImportValue CerberusMetricsTopicARN
   CerberusCrossRegionBackupS3Bucket:
     Type: "AWS::S3::Bucket"
     Properties:
@@ -132,7 +67,7 @@ Resources:
                   - "/*"
             Principal:
               AWS:
-                - !GetAtt CerberusCrossRegionBackupRole.Arn
+                - !ImportValue CerberusAdminIamRoleARN
   CerberusCrossRegionBackupKmsKey:
     Type: "AWS::KMS::Key"
     Properties:
@@ -155,7 +90,7 @@ Resources:
             Sid: "Allow use of the key"
             Effect: "Allow"
             Principal:
-              AWS: !GetAtt CerberusCrossRegionBackupRole.Arn
+              AWS: !ImportValue CerberusAdminIamRoleARN
             Action:
               - "kms:Encrypt"
               - "kms:GenerateDataKey*"
