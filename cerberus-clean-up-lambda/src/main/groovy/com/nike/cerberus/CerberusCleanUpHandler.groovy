@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit
 /**
  * Entry point for the clean up Lambda
  */
-class CleanUpHandler {
+class CerberusCleanUpHandler {
 
     private static final int DEFAULT_HTTP_CLIENT_TIMEOUT = 10
     private static final TimeUnit DEFAULT_HTTP_CLIENT_TIMEOUT_UNIT = TimeUnit.SECONDS
@@ -24,10 +24,9 @@ class CleanUpHandler {
     private static Logger log = Logger.getLogger(getClass())
 
     def runCleanUp() {
-        String cleanUpPath = 'unknown'
+        String cleanUpPath = '/v1/cleanup'
         String cerberusEnvironment = 'unknown'
         String region = 'unknown'
-        def authRetryCount = 'unknown'
 
         try {
             log.info 'Checking for required environmental Variables'
@@ -36,7 +35,6 @@ class CleanUpHandler {
             String iamPrincipalArn = EnvUtils.getRequiredEnv('IAM_PRINCIPAL_ARN')
             region = EnvUtils.getRequiredEnv('REGION')
 
-            // Authenticating
             log.info 'Authenticating with Cerberus'
             def credsProvider = new StaticIamRoleVaultCredentialsProvider(cerberusUrl, iamPrincipalArn, region)
             def authResult = credsProvider.getCredentials()
@@ -50,15 +48,18 @@ class CleanUpHandler {
                     .readTimeout(DEFAULT_HTTP_CLIENT_TIMEOUT, DEFAULT_HTTP_CLIENT_TIMEOUT_UNIT)
                     .build()
 
-            cleanUpOrphanedAndInactiveRecords(client, authToken, cerberusUrl)
+            def statusCode = cleanUpOrphanedAndInactiveRecords(client, authToken, cleanUpPath, cerberusUrl)
+            if (statusCode != 204) {
+                throw new IllegalStateException("Clean up was not successful!")
+            }
+
 
             log.info("Successfully executed cleanup")
             return [
                     environment: cerberusEnvironment,
-                    status: 'success',
+                    success: true,
                     cleanUpPath: cleanUpPath,
                     region: region,
-                    authRetryCount: authRetryCount
             ]
         } catch (Throwable t) {
             return [
@@ -66,7 +67,6 @@ class CleanUpHandler {
                     status: 'failed',
                     cleanUpPath: cleanUpPath,
                     region: region,
-                    authRetryCount: authRetryCount,
                     error: true,
                     throwableMessage: ExceptionUtils.getMessage(t),
                     throwableMessageStacktrace: ExceptionUtils.getStackTrace(t)
@@ -76,6 +76,7 @@ class CleanUpHandler {
 
     private int cleanUpOrphanedAndInactiveRecords(OkHttpClient client,
                                                   String authToken,
+                                                  String cleanupPath,
                                                   String cerberusUrl) {
 
         try {
@@ -87,12 +88,14 @@ class CleanUpHandler {
                     ]).toString())
 
             Request request = new Request.Builder()
-                    .url("${cerberusUrl}/v1/cleanup")
+                    .url("${cerberusUrl}${cleanupPath}")
                     .addHeader('X-Vault-Token', authToken)
                     .put(body)
                     .build()
 
-            client.newCall(request).execute().code()
+            def response = client.newCall(request).execute()
+
+            return response.code()
         } catch (Throwable t) {
             log.error("Failed to clean up orphaned and inactive records", t)
             throw t

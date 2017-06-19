@@ -19,13 +19,18 @@ Resources:
     Type: 'AWS::Serverless::Function'
     Properties:
       Handler: >-
-         com.nike.cerberus.CleanUpHandler::runCleanUp
+         com.nike.cerberus.CerberusCleanUpHandler::runCleanUp
       Runtime: java8
       Description: Function to clean up for orphaned and inactive records in Cerberus
       MemorySize: 512
       Timeout: 300
       CodeUri: @@CODE_URI@@
       Role: !ImportValue CerberusAdminIamRoleARN
+      Events:
+        Timer:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 18 ? * MON-FRI *)
       Environment:
         Variables:
           IAM_PRINCIPAL_ARN: !ImportValue CerberusAdminIamRoleARN

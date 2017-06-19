@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: >
   Creates the admin IAM role to be used by the Lambda serverless components to call the Cerberus Management Service admin endpoints.
 Parameters:
-  AdminUserArn:
+  AdminRoleArn:
     Type: String
     Description: The arn for the admin user
 Resources:
@@ -17,7 +17,7 @@ Resources:
             Principal:
               # allow admin for integration testing
               AWS:
-                - !Ref AdminUserArn
+                - !Ref AdminRoleArn
               Service:
                 - "lambda.amazonaws.com"
             Action:

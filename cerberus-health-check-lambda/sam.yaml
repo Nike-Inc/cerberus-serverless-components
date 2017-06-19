@@ -16,7 +16,7 @@ Resources:
     Type: 'AWS::Serverless::Function'
     Properties:
       Handler: >-
-         com.nike.cerberus.CleanUpHandler::runHealthCheck
+         com.nike.cerberus.HealthCheckHandler::runHealthCheck
       Runtime: java8
       Description: Cerberus Health Check
       MemorySize: 512
