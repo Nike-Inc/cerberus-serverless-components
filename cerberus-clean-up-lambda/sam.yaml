@@ -30,7 +30,7 @@ Resources:
         Timer:
           Type: Schedule
           Properties:
-            Schedule: cron(0 18 ? * MON-FRI *)
+            Schedule: cron(0 8 ? * MON-FRI *)
       Environment:
         Variables:
           IAM_PRINCIPAL_ARN: !ImportValue CerberusAdminIamRoleARN
