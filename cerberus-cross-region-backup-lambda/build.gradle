@@ -38,7 +38,7 @@ dependencies {
     parameterOverrides = [
             Environment: project.environment,
             CerberusUrl: getProfileProperty('cerberus.url'),
-            AdminRoleArn: getProfileProperty('cerberus.admin_role_arn'),
+            AdminPrincipalArn: getProfileProperty('cerberus.admin_principal_arn'),
             SubnetIds: getProfileProperty('backup.lambda_vpc.subnet_ids'),
             SecurityGroupIds: getProfileProperty('backup.lambda_vpc.security_group_ids')
     ]

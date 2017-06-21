@@ -8,7 +8,7 @@ Parameters:
   CerberusUrl:
     Type: String
     Description: The url for the cerberus environment
-  AdminRoleArn:
+  AdminPrincipalArn:
     Type: String
     Description: The arn for the admin user
   SubnetIds:
@@ -85,7 +85,7 @@ Resources:
             Effect: "Allow"
             Principal:
               AWS:
-                - !Ref AdminRoleArn
+                - !Ref AdminPrincipalArn
             Action:
               - "kms:*"
             Resource: "*"
