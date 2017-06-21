@@ -11,5 +11,5 @@ task deploy(type: DeploySamTask) {
     templatePath = "${project.projectDir}${File.separator}admin-iam-role.yaml"
     logStackOutputs = true
     parameterOverrides = [ AdminRoleArn: getProfileProperty('cerberus.admin_role_arn') ]
-    region = getProfileProperty('admin_iam_role.region')
+    region = getProfileProperty('cerberus.lambda_vpc_region')
 }

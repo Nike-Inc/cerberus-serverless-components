@@ -21,7 +21,8 @@ dependencies {
 }
 
 task deploy(type: MultiRegionPackageAndDeploySamTask) {
-    regions = [getProfileProperty('clean_up.primary_region')]
+    def region = getProfileProperty('cerberus.lambda_vpc_region')
+    regions = [region]
     stackName = "${project.environment}-${project.name}"
     templatePath = "${project.projectDir}${File.separator}sam.yaml"
     regionToS3BucketMap = getRegionBucketMap(getProfileProperty('cerberus.lambda_uploads_region_buckets'))
@@ -31,7 +32,7 @@ task deploy(type: MultiRegionPackageAndDeploySamTask) {
     parameterOverrides = [
             CerberusUrl: getProfileProperty('cerberus.url'),
             CerberusEnvironment: "${project.environment}",
-            Region: getProfileProperty('clean_up.primary_region')
+            Region: region
     ]
     logStackOutputs = true
 }
