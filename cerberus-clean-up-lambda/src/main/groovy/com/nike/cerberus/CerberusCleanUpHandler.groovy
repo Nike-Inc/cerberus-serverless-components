@@ -50,27 +50,19 @@ class CerberusCleanUpHandler {
 
             def statusCode = cleanUpOrphanedAndInactiveRecords(client, authToken, cleanUpPath, cerberusUrl)
             if (statusCode != 204) {
-                throw new IllegalStateException("Clean up was not successful!")
+                throw new IllegalStateException("Clean up was not successful! status code: " + statusCode)
             }
 
 
-            log.info("Successfully executed cleanup")
-            return [
-                    environment: cerberusEnvironment,
-                    success: true,
-                    cleanUpPath: cleanUpPath,
-                    region: region,
-            ]
+            log.info(String.format("Successfully executed cleanup for env: %s in region: %s",
+                    cerberusEnvironment,
+                    region))
         } catch (Throwable t) {
-            return [
-                    environment: cerberusEnvironment,
-                    status: 'failed',
-                    cleanUpPath: cleanUpPath,
-                    region: region,
-                    error: true,
-                    throwableMessage: ExceptionUtils.getMessage(t),
-                    throwableMessageStacktrace: ExceptionUtils.getStackTrace(t)
-            ]
+            log.error(String.format("Clean up request (%s) for env: %s in region: %s failed because: %s",
+                    cleanUpPath,
+                    cerberusEnvironment,
+                    region,
+                    ExceptionUtils.getMessage(t)), t)
         }
     }
 
