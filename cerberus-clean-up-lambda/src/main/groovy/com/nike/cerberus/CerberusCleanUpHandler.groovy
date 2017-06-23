@@ -34,6 +34,7 @@ class CerberusCleanUpHandler {
             cerberusEnvironment = EnvUtils.getRequiredEnv('ENVIRONMENT')
             String iamPrincipalArn = EnvUtils.getRequiredEnv('IAM_PRINCIPAL_ARN')
             region = EnvUtils.getRequiredEnv('REGION')
+            int kmsExpirationPeriodInDays = Integer.parseInt(EnvUtils.getRequiredEnv('KMS_EXPIRATION_PERIOD_IN_DAYS'))
 
             log.info 'Authenticating with Cerberus'
             def credsProvider = new StaticIamRoleVaultCredentialsProvider(cerberusUrl, iamPrincipalArn, region)
@@ -48,17 +49,18 @@ class CerberusCleanUpHandler {
                     .readTimeout(DEFAULT_HTTP_CLIENT_TIMEOUT, DEFAULT_HTTP_CLIENT_TIMEOUT_UNIT)
                     .build()
 
-            def statusCode = cleanUpOrphanedAndInactiveRecords(client, authToken, cleanUpPath, cerberusUrl)
+            def statusCode = cleanUpOrphanedAndInactiveRecords(client, authToken, cleanUpPath, cerberusUrl, kmsExpirationPeriodInDays)
             if (statusCode != 204) {
-                throw new IllegalStateException("Clean up was not successful! status code: " + statusCode)
+                throw new IllegalStateException("Clean up was not successful! Expected status 204 from CMS," +
+                        "but got status code: " + statusCode)
             }
 
 
-            log.info(String.format("Successfully executed cleanup for env: %s in region: %s",
+            log.info(String.format("Successfully executed cleanup for env: '%s' in region: '%s'",
                     cerberusEnvironment,
                     region))
         } catch (Throwable t) {
-            log.error(String.format("Clean up request (%s) for env: %s in region: %s failed because: %s",
+            log.error(String.format("Clean up request (%s) for env: '%s' in region: '%s' failed because: %s",
                     cleanUpPath,
                     cerberusEnvironment,
                     region,
@@ -69,14 +71,19 @@ class CerberusCleanUpHandler {
     private int cleanUpOrphanedAndInactiveRecords(OkHttpClient client,
                                                   String authToken,
                                                   String cleanupPath,
-                                                  String cerberusUrl) {
+                                                  String cerberusUrl,
+                                                  int kmsExpirationPeriodInDays) {
 
         try {
+            log.info(String.format("Cleaning up orphaned and inactive records: url: '%s%s', kmsKeyExpiration: %d days",
+                    cerberusUrl,
+                    cleanupPath,
+                    kmsExpirationPeriodInDays))
             MediaType JSON = MediaType.parse("application/json; charset=utf-8")
 
             RequestBody body = RequestBody.create(JSON,
                     new JsonBuilder([
-                            kms_expiration_period_in_days: 30
+                            kms_expiration_period_in_days: kmsExpirationPeriodInDays
                     ]).toString())
 
             Request request = new Request.Builder()

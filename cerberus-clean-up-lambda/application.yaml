@@ -2,15 +2,15 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
 Description: Authenticate with Cerberus using IAM Principal auth and clean up orphaned or inactive records
 Parameters:
-  Region:
-    Type: String
-    Description: The AWS region in which the Cerberus environment is running
   CerberusUrl:
     Type: String
     Description: The Cerberus API to test.
   CerberusEnvironment:
     Type: String
     Description: The Cerberus environment.
+  KmsExpirationPeriodInDays:
+    Type: Number
+    Description: Clean up KMS keys that have been inactive for n days.
 
 Resources:
 
@@ -37,3 +37,4 @@ Resources:
           REGION: !Ref AWS::Region
           CERBERUS_URL: !Ref CerberusUrl
           ENVIRONMENT: !Ref CerberusEnvironment
+          KMS_EXPIRATION_PERIOD_IN_DAYS: !Ref KmsExpirationPeriodInDays
