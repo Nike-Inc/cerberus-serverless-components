@@ -11,9 +11,11 @@ This project contains the serverless components that can be used with Cerberus.
 * [Cerberus Health Check](cerberus-health-check-lambda/README.md) - A small serverless API that authenticates and reads a secret from cerberus.
 * [Cerberus Artemis KPI Lambda](cerberus-artemis-kpi-lambda/README.md) - Reference Example function for processing Cerberus metrics from the metrics topic
 * [Cerberus CloudFront Lambda](cerberus-cloudfront-lambda/README.md) - Serverless function for processing CloudFront log events, to enable things such as rate limiting and optionally Google Analytics KPI tracking
-* [Cerberus Cross Region Backup Lambda](cerberus-cross-region-backup-lambda/README.md) - Serverless function for for making complete backups of the data in Cerberus (CMS / Vault) and backing it up in a different region encrypted with KMS. With this function enabled, Cerberus operators can use the CLI to complete data restores in new regions or the original region.
+* [Cerberus Cross Region Backup Lambda](cerberus-cross-region-backup-lambda/README.md) - Serverless function for making complete backups of the data in Cerberus (CMS / Vault) and backing it up in a different region encrypted with KMS. With this function enabled, Cerberus operators can use the CLI to complete data restores in new regions or the original region.
 * [Cerberus Lambda VPC](cerberus-lambda-vpc/README.md) - Cloudformation to create a VPC with EIBs and NATs so that Cerberus operators can run lambdas with predictable IP addresses. The backup lambda should run in this VPC so that the IPs can be white listed to avoid rate limiting.
 * [Cerberus Metrics Topic](cerberus-metrics-topic/README.md) - Cloudformation to create a SNS topic that is used by various components to publish Cerberus metrics.
+* [Cerberus Admin IAM Role](cerberus-admin-iam-role/README.md) - Creates the admin IAM role to be used by the Lambda serverless components to call the Cerberus Management Service admin endpoints.
+* [Cerberus Clean Up Lambda](cerberus-clean-up-lambda/README.md) - Serverless function for cleaning up previously orphaned or currently inactive KMS key and IAM role data
 
 ## Profiles
 

@@ -1,0 +1,83 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Creates the admin IAM role to be used by the Lambda serverless components to call the Cerberus Management Service admin endpoints.
+Parameters:
+  AdminPrincipalArn:
+    Type: String
+    Description: The arn for the admin user
+Resources:
+  CerberusAdminIamRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              # allow admin for integration testing
+              AWS:
+                - !Ref AdminPrincipalArn
+              Service:
+                - "lambda.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: "/"
+      Policies:
+        -
+          PolicyName: "network-inf-policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: "Allow"
+                Action:
+                  - ec2:DescribeNetworkInterfaces
+                  - ec2:CreateNetworkInterface
+                  - ec2:DeleteNetworkInterface
+                Resource: "*"
+        -
+          PolicyName: "logs-policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: "Allow"
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "*"
+        -
+          PolicyName: "cerberus-policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: "Allow"
+                Action:
+                  - kms:Decrypt
+                Resource: "*"
+        -
+          PolicyName: "track-metrics"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: "Allow"
+                Action:
+                  - SNS:Publish
+                Resource: !ImportValue CerberusMetricsTopicARN
+
+Outputs:
+  CerberusAdminIamRoleARN:
+    Description: The ARN of the admin IAM role for Lambdas to assume to call Cerberus admin endpoints.
+    Value: !GetAtt CerberusAdminIamRole.Arn
+    Export:
+      Name: CerberusAdminIamRoleARN
+
+  CerberusAdminIamRole:
+    Description: The admin IAM role for Lambdas to assume to call Cerberus admin endpoints.
+    Value: !Ref CerberusAdminIamRole
+    Export:
+      Name: CerberusAdminIamRole
