@@ -11,6 +11,9 @@ Parameters:
   KmsExpirationPeriodInDays:
     Type: Number
     Description: Clean up KMS keys that have been inactive for n days.
+  Region:
+    Type: String
+    Description: The Cerberus environment region.
 
 Resources:
 
@@ -30,11 +33,11 @@ Resources:
         Timer:
           Type: Schedule
           Properties:
-            Schedule: cron(0 8 ? * MON-FRI *)
+            Schedule: cron(0 15 ? * MON-FRI *)
       Environment:
         Variables:
           IAM_PRINCIPAL_ARN: !ImportValue CerberusAdminIamRoleARN
-          REGION: !Ref AWS::Region
+          REGION: !Ref Region
           CERBERUS_URL: !Ref CerberusUrl
           ENVIRONMENT: !Ref CerberusEnvironment
           KMS_EXPIRATION_PERIOD_IN_DAYS: !Ref KmsExpirationPeriodInDays

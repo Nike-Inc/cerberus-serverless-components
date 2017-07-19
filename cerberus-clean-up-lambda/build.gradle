@@ -30,7 +30,8 @@ dependencies {
     parameterOverrides = [
             CerberusUrl: getProfileProperty('cerberus.url'),
             CerberusEnvironment: "${project.environment}",
-            KmsExpirationPeriodInDays: getProfileProperty('cleanup.kms_expiration_period_in_days')
+            KmsExpirationPeriodInDays: getProfileProperty('cleanup.kms_expiration_period_in_days'),
+            Region: getProfileProperty('cerberus.primary_region')
     ]
     logStackOutputs = true
 }
