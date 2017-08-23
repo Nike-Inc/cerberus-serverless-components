@@ -120,13 +120,13 @@ public class RateLimitingProcessor implements Processor {
         StringBuilder builder = new StringBuilder("Cloud Front Log Event Handler - Rate Limiting Processor run summary\n");
         builder.append("Running Environment: ").append(config.getEnv()).append("\n");
         builder.append("IP addresses removed from auto block list: ");
-        ipsRemoved.forEach(ip -> builder.append(ip).append(", "));
+        ipsRemoved.stream().sorted().forEach(ip -> builder.append(ip).append(", "));
         builder.append("\n");
         builder.append("IP addresses added to auto block list: ");
-        ipsAdded.forEach(ip -> builder.append(ip).append(", "));
+        ipsAdded.stream().sorted().forEach(ip -> builder.append(ip).append(", "));
         builder.append("\n");
         builder.append("IP addresses already on auto block list: ");
-        ipsAlreadyBlocked.forEach(ip -> builder.append(ip).append(", "));
+        ipsAlreadyBlocked.stream().sorted().forEach(ip -> builder.append(ip).append(", "));
 
         String text = builder.toString();
         if (StringUtils.isNotBlank(config.getSlackWebHookUrl())) {
