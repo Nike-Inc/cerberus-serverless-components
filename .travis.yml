@@ -2,7 +2,7 @@ language: java
 jdk:
 - oraclejdk8
 script:
-  - ./gradlew clean cerberus-cloudfront-lambda:shadowJar
+  - ./gradlew clean cerberus-rate-limit-lambda:shadowJar
 after_success:
 - "./gradlew jacocoTestReport coveralls --stacktrace"
 deploy:
@@ -12,7 +12,7 @@ deploy:
     secure: 5YhoOioiwSWY6D1tuD/QgL84DrPt39ZBYvn3eIs3ccBcC6cgTrUJ5eB3bHR/yl9egmCC+UW1KCG+V2moDnCkIAkLCKvZrzNRpG+wwGYR/suYc2pwCmyCJYMOBHkdlFjP5xGnpCYmWJqIpklp/HZY45zQdOMVFunbIhDv6qXEwfJoEsGB4U2NeYBa08z1MH9n8figy4pRvmAAlGiJsBfcwAlBYpsHni0oPAf61W1kCDpB1gkFfi2aEK31lFPZh5h2eR5aR8r9aI5KDePjWijbu2IdFLnN60JNrWrw6PL+Z7ct3V1DsqJ3/gMhNUOjeffuCjEY0h/knUy6Jt7R7TpEZTKmjwXr434LIdinPyWUnzwk60g9Dj/Sjg4wclL98lpwL5S5fgmWFr2FWEnYrJSrCYTZF1oBToG7F12kdzEYCkiOWv28SXonKtAFmuJnxvyOFaVDOSjIJCqBOTJb8QShB+SVCODiPHZCIzWX9+bCibbOxt+GE7QREaaNHIlowNxaNSVQziDw7fBNk+RBKGTOBWnRhRRAfqmvRy4l+wsLN4yXbxrx8DsEtCd13oaNgdmuLC9SlYL4XWKZ7+R17AaEOjmkm/0Xqneb0klWzg+pafaQlU3BrSlGHpH3Gckn3aRA5ITNPKh4djv5h2weLiat/Uwnw0XQdchlK7V9MibtESA=
   file_glob: true
   file:
-    - cerberus-cloudfront-lambda/build/libs/cerberus-cloudfront-lambda*
+    - cerberus-rate-limit-lambda/build/libs/cerberus-rate-limit-lambda*
   on:
     repo: Nike-Inc/cerberus-serverless-components
     tags: true
