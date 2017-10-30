@@ -2,7 +2,7 @@ language: java
 jdk:
 - oraclejdk8
 script:
-  - ./gradlew clean cerberus-cross-region-backup-lambda:shadowJar cerberus-rate-limit-lambda:shadowJar
+  - ./gradlew clean cerberus-rate-limit-lambda:shadowJar
 after_success:
 - "./gradlew jacocoTestReport coveralls --stacktrace"
 deploy:
@@ -13,7 +13,6 @@ deploy:
   file_glob: true
   file:
     - cerberus-rate-limit-lambda/build/libs/cerberus-rate-limit-lambda*
-    - cerberus-cross-region-backup-lambda/build/libs/cerberus-cross-region-backup-lambda*
   on:
     repo: Nike-Inc/cerberus-serverless-components
     tags: true
