@@ -1,5 +1,5 @@
 rootProject.name = 'cerberus-serverless-components'
-include 'cerberus-cloudfront-lambda',
+include 'cerberus-rate-limit-lambda',
         'cerberus-lambda-vpc',
         'cerberus-artemis-kpi-lambda',
         'cerberus-metrics-topic',

@@ -1,0 +1,143 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: Run rate limit lambda whenever S3 file is written to the ALB access log bucket
+Parameters:
+#  AlbLogBucket:
+#    Type: String
+#    Description: The ARN of the S3 bucket where the ALB sends its logs
+  CerberusUrl:
+    Type: String
+    Description: The Cerberus API to test.
+  CerberusEnvironment:
+    Type: String
+    Description: The Cerberus environment.
+  ManualBlacklistIpSetId:
+    Type: String
+    Description: The ID of the Cerberus manual blacklist IP set.
+  ManualWhitelistIpSetId:
+    Type: String
+    Description: The ID of the Cerberus manual whitelist IP set.
+  RateLimitAutoBlacklistIpSetId:
+    Type: String
+    Description: The ID of the Cerberus manual auto-blacklist IP set.
+  RequestPerMinuteLimit:
+    Type: Number
+    Description: The number of requests per minute allowed per IP address
+  ViolationBlacklistDurationInMins:
+    Type: Number
+    Description: The number of minutes to blacklist an IP address for after it has violated the rate limit
+  GoogleAnalyticsId:
+    Type: String
+    Description: The ID of the Google Analytics account to which the Lambda will send KPIs
+  SlackIcon:
+    Type: String
+    Description: URL of an icon image file to be used in Slack
+  SlackWebHookUrl:
+    Type: String
+    Description: The Slack HTTP endpoint to which the Lambda will post rate limit notifications
+Resources:
+
+  # Rate limiting Lambda function
+  LambdaWAFBlacklistingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Function for auto black listing ips that are misbehaving
+      CodeUri: @@CODE_URI@@
+      Handler: >-
+         com.nike.cerberus.lambda.waf.handler.AppLoadBalancerLogEventHandler::handleNewS3Event
+      Runtime: java8
+      MemorySize: 512
+      Timeout: 60
+      Role: !GetAtt WAFLambdaRole.Arn
+      Environment:
+        Variables:
+          IAM_PRINCIPAL_ARN: !Ref WAFLambdaRole
+          REGION: !Ref AWS::Region
+          CERBERUS_URL: !Ref CerberusUrl
+          ENVIRONMENT: !Ref CerberusEnvironment
+          MANUAL_BLACKLIST_IP_SET_ID: !Ref ManualBlacklistIpSetId
+          MANUAL_WHITELIST_IP_SET_ID: !Ref ManualWhitelistIpSetId
+          RATE_LIMIT_AUTO_BLACKLIST_IP_SET_ID: !Ref RateLimitAutoBlacklistIpSetId
+          REQUEST_PER_MIN_LIMIT: !Ref RequestPerMinuteLimit
+          VIOLATION_BLACKLIST_DURATION_IN_MINS: !Ref ViolationBlacklistDurationInMins
+          GOOGLE_ANALYTICS_ID: !Ref GoogleAnalyticsId
+          SLACK_ICON: !Ref SlackIcon
+          SLACK_WEB_HOOK_URL: !Ref SlackWebHookUrl
+#      Events:
+#        AlbAccessLogFileCreated:
+#          Type: S3
+#          Properties:
+#            Bucket: !Ref AlbLogBucket
+#            Events: s3:ObjectCreated:*
+#            Filter:
+#              S3Key:
+#                Rules:
+#                  - Name: suffix,
+#                  - Value: gz
+
+  LambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    DependsOn: LambdaWAFBlacklistingFunction
+    Properties:
+      Action: lambda:*
+      FunctionName: !GetAtt 'LambdaWAFBlacklistingFunction.Arn'
+      Principal: s3.amazonaws.com
+      SourceAccount: !Ref 'AWS::AccountId'
+
+  WAFLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+        Version: '2012-10-17'
+      Path: /
+      Policies:
+        - PolicyDocument:
+            Statement:
+              - Action:
+                  - waf-regional:*
+                Effect: Allow
+                Resource: '*'
+          PolicyName: WAFAccess
+        - PolicyDocument:
+            Statement:
+              - Action:
+                  - s3:ListAllMyBuckets
+                Effect: Allow
+                Resource: '*'
+          PolicyName: S3BucketList
+        - PolicyDocument:
+            Statement:
+              - Action:
+                  - logs:*
+                Effect: Allow
+                Resource: '*'
+          PolicyName: LogsAccess
+        - PolicyDocument:
+            Statement:
+              - Action:
+                  - lambda:*
+                Effect: Allow
+                Resource: '*'
+          PolicyName: LambdaAccess
+        - PolicyDocument:
+            Statement:
+              - Action:
+                  - cloudformation:DescribeStacks
+                  - cloudformation:ListStacks
+                Effect: Allow
+                Resource: '*'
+          PolicyName: CloudFormationAccess
+        - PolicyDocument:
+            Statement:
+              - Action:
+                  - cloudwatch:PutMetricData
+                Effect: Allow
+                Resource: '*'
+          PolicyName: CloudWatchAccess
