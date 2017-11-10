@@ -19,8 +19,6 @@ import com.amazonaws.services.waf.model.UpdateIPSetRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fieldju.slackclient.Message;
-import com.fieldju.slackclient.SlackClient;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
 import com.google.common.collect.RangeSet;
@@ -28,7 +26,6 @@ import com.google.common.collect.TreeRangeSet;
 import com.nike.cerberus.lambda.waf.CloudFrontLogHandlerConfig;
 import com.nike.cerberus.lambda.waf.CloudFrontLogEvent;
 import com.nike.cerberus.lambda.waf.ViolationMetaData;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.net.util.SubnetUtils;
 import org.apache.log4j.Logger;
 
@@ -113,7 +110,7 @@ public class RateLimitingProcessor implements Processor {
         List<String> ipsAdded = summery.get("added");
         List<String> ipsAlreadyBlocked = summery.get("duplicate");
 
-        if (ipsRemoved.isEmpty() && ipsAdded.isEmpty() && ipsAlreadyBlocked.isEmpty()) {
+        if (ipsRemoved.isEmpty() && ipsAdded.isEmpty()) {
             return;
         }
 
