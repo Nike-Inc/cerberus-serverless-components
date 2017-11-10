@@ -3,6 +3,7 @@ package com.nike.cerberus.lambda.waf.processor;
 import com.google.common.collect.ImmutableList;
 import com.nike.cerberus.lambda.waf.CloudFrontLogEvent;
 import com.nike.cerberus.lambda.waf.CloudFrontLogHandlerConfig;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import java.util.LinkedList;
@@ -13,7 +14,7 @@ import java.util.List;
  */
 public class TlsVerificationProcessor implements Processor {
 
-    private static final String TLS_1_2 = "1.2";
+    private static final String TLS_1_2 = "TLSv1.2";
     private static final List<String> ACCEPTABLE_TLS_VERSIONS = ImmutableList.of(
             TLS_1_2
     );
@@ -36,10 +37,10 @@ public class TlsVerificationProcessor implements Processor {
         StringBuilder sb = new StringBuilder("Cloud Front Log Event Handler - TLS Verification Processor run summary");
         sb.append('\n').append("Running Environment: ").append(config.getEnv()).append('\n');
         nonAcceptableEvents.forEach(event -> {
-            sb.append("IP: ").append(event.getCIp())
-                    .append("User Agent").append(event.getcsUserAgent())
-                    .append("Path: ").append(event.getCsUriStem())
-                    .append("TLS Version: ").append(event.getSslProtocol()).append('\n');
+            sb.append("IP: ").append(event.getCIp()).append('\n')
+                    .append("User Agent: ").append(StringUtils.substring(event.getcsUserAgent(), 0, 30)).append('\n')
+                    .append("Path: ").append(event.getCsUriStem()).append('\n')
+                    .append("TLS Version: ").append(event.getSslProtocol()).append('\n').append('\n');
         });
 
         String msg = sb.toString();
