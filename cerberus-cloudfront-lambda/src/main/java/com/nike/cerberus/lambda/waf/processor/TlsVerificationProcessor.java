@@ -38,10 +38,12 @@ public class TlsVerificationProcessor implements Processor {
         StringBuilder sb = new StringBuilder("Cloud Front Log Event Handler - TLS Verification Processor run summary");
         sb.append('\n').append("Running Environment: ").append(config.getEnv()).append('\n');
         nonAcceptableEvents.forEach(event -> {
-            sb.append("IP: ").append(event.getCIp()).append('\n')
-                    .append("User Agent: ").append(StringUtils.substring(event.getcsUserAgent(), 0, 30)).append('\n')
-                    .append("Path: ").append(event.getCsUriStem()).append('\n')
-                    .append("TLS Version: ").append(event.getSslProtocol()).append('\n').append('\n');
+            sb
+                    .append("TLS Version: ").append(event.getSslProtocol())
+                    .append(", Path: ").append(event.getCsUriStem())
+                    .append(", IP: ").append(event.getCIp())
+                    .append(", User Agent: ").append(StringUtils.substring(event.getcsUserAgent(), 0, 30))
+                    .append('\n');
         });
 
         String msg = sb.toString();
