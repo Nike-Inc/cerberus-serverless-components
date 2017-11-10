@@ -24,6 +24,7 @@ import com.nike.cerberus.lambda.waf.processor.Processor;
 import com.nike.cerberus.lambda.waf.processor.RateLimitingProcessor;
 import com.nike.cerberus.lambda.waf.CloudFrontLogHandlerConfig;
 import com.nike.cerberus.lambda.waf.CloudFrontLogEvent;
+import com.nike.cerberus.lambda.waf.processor.TlsVerificationProcessor;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
@@ -70,6 +71,7 @@ public class CloudFrontLogEventHandler {
         // see CloudFormationDefinedParams
         logEventProcessors.add(new RateLimitingProcessor(objectMapper, awsWaf, amazonS3Client));
         logEventProcessors.add(new GoogleAnalyticsKPIProcessor());
+        logEventProcessors.add(new TlsVerificationProcessor());
     }
 
     @VisibleForTesting

@@ -129,15 +129,9 @@ public class RateLimitingProcessor implements Processor {
         ipsAlreadyBlocked.stream().sorted().forEach(ip -> builder.append(ip).append(", "));
 
         String text = builder.toString();
-        if (StringUtils.isNotBlank(config.getSlackWebHookUrl())) {
-            Message.Builder msgBuilder = new Message.Builder(text).userName("Rate-Limiting-Processor");
-            if (StringUtils.startsWith(config.getSlackIcon(), "http")) {
-                msgBuilder.iconUrl(config.getSlackIcon());
-            } else {
-                msgBuilder.iconEmoji(config.getSlackIcon());
-            }
-            new SlackClient(config.getSlackWebHookUrl()).sendMessage(msgBuilder.build());
-        }
+
+        SlackUtils.logMsgIfEnabled(text, config, "Rate-Limiting-Processor");
+
         log.info(text);
     }
 
