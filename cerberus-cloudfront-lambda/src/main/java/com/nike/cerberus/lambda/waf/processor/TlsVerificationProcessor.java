@@ -8,6 +8,9 @@ import org.apache.log4j.Logger;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * For tracking down clients that are not using TLS1.2
+ */
 public class TlsVerificationProcessor implements Processor {
 
     private static final String TLS_1_2 = "1.2";
@@ -34,7 +37,7 @@ public class TlsVerificationProcessor implements Processor {
         sb.append('\n').append("Running Environment: ").append(config.getEnv()).append('\n');
         nonAcceptableEvents.forEach(event -> {
             sb.append("IP: ").append(event.getCIp())
-                    .append("X-Forwarded-For").append(event.getXForwardedFor())
+                    .append("User Agent").append(event.getcsUserAgent())
                     .append("Path: ").append(event.getCsUriStem())
                     .append("TLS Version: ").append(event.getSslProtocol()).append('\n');
         });
