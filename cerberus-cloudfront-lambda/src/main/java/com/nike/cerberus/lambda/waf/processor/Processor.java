@@ -6,5 +6,5 @@ import com.nike.cerberus.lambda.waf.CloudFrontLogEvent;
 import java.util.List;
 
 public interface Processor {
-    void processLogEvents(List<CloudFrontLogEvent> events, CloudFrontLogHandlerConfig params, String bucketName);
+    void processLogEvents(List<CloudFrontLogEvent> events, CloudFrontLogHandlerConfig config, String bucketName);
 }
