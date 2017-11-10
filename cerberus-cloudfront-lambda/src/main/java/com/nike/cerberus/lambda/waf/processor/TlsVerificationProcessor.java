@@ -32,6 +32,7 @@ public class TlsVerificationProcessor implements Processor {
 
         if (nonAcceptableEvents.isEmpty()) {
             log.info("No requests found with TLS versions not in acceptable version list");
+            return;
         }
 
         StringBuilder sb = new StringBuilder("Cloud Front Log Event Handler - TLS Verification Processor run summary");
