@@ -1,0 +1,53 @@
+version '1.3.0'
+
+dependencies {
+    compile group: 'com.amazonaws', name: 'aws-lambda-java-core', version: '1.1.0'
+    compile group: 'com.amazonaws', name: 'aws-lambda-java-log4j', version: '1.0.0'
+    compile group: 'com.amazonaws', name: 'aws-lambda-java-events', version: '1.3.0'
+    compile group: 'com.amazonaws', name: 'aws-java-sdk-cloudformation', version: '1.11.221'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.8.3'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.8.3'
+    compile group: 'com.google.guava', name: 'guava', version: '19.0'
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
+    compile group: 'commons-net', name: 'commons-net', version: '3.5'
+    compile group: 'com.amazonaws', name: 'aws-java-sdk-waf', version: '1.11.221'
+    compile group: 'com.fieldju', name: 'slack-client', version: '2.0.0'
+    compile group: 'com.brsanthu', name: 'google-analytics-java', version: '1.1.2'
+
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    testCompile group: 'org.mockito', name: 'mockito-all', version: '1.9.5'
+}
+
+shadowJar {
+    baseName = 'cerberus-log-processor-lambda'
+    classifier = null
+}
+
+'aws-sam-deployer' {
+    region = getProfileProperty('log_processor.region')
+    s3Bucket = getProfileProperty('cerberus.lambda_artifact.s3_bucket')
+    s3Prefix = "${project.getName()}-artifact-uploads"
+    stackName = "${project.environment}-${project.name}"
+    samTemplatePath = "${project.projectDir}${File.separator}application.yaml"
+    tokenArtifactMap = [
+            '@@CODE_URI@@': "${project.buildDir}${File.separator}libs${File.separator}${project.getName()}-${version}.jar"
+    ]
+    parameterOverrides = [
+            CerberusUrl: getProfileProperty('cerberus.url'),
+            CerberusEnvironment: "${project.environment}",
+            AlbLogBucket: getProfileProperty('log_processor.alb_log_bucket'),
+            ViolationBlacklistDurationInMins: getProfileProperty('log_processor.violation_blacklist_duration_in_mins'),
+            RequestPerMinuteLimit: getProfileProperty('log_processor.request_per_minute_limit'),
+            SlackWebHookUrl: getProfileProperty('log_processor.slack_web_hook_url'),
+            SlackIcon: getProfileProperty('log_processor.slack_cerberus_icon'),
+            GoogleAnalyticsId: getProfileProperty('log_processor.google_analystics_id'),
+            ManualBlacklistIpSetId: getProfileProperty('log_processor.manual_blacklist_ip_set_id'),
+            ManualWhitelistIpSetId: getProfileProperty('log_processor.manual_whitelist_ip_set_id'),
+            RateLimitAutoBlacklistIpSetId: getProfileProperty('log_processor.auto_blacklist_ip_set_id')
+    ]
+    logStackOutputs = true
+}
+
+tasks.assemble.finalizedBy shadowJar
+
+tasks.check.dependsOn jacocoTestReport
