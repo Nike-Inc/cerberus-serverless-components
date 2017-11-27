@@ -80,7 +80,7 @@ subprojects {
         afterEvaluate {
             classDirectories = files(classDirectories.files.collect {
                 fileTree(dir: it, exclude: [
-                        '**/com/nike/cerberus/lambda/waf/CloudFrontLogEvent*'
+                        '**/com/nike/cerberus/lambda/waf/ALBAccessLogEvent*'
                 ])
             })
         }
@@ -133,7 +133,7 @@ subprojects {
     }
     
     dependencies {
-        compile 'com.fieldju:commons:1.1.0'
+        compile 'com.fieldju:commons:1.2.0'
     }
 }
 
