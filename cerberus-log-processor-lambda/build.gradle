@@ -130,7 +130,7 @@ void addLambdaPermissionToS3Bucket(AmazonS3 s3Client, String s3BucketName, Strin
     Policy policy = Policy.fromJson(bucketPolicy.getPolicyText())
     Collection<Statement> statements = policy.getStatements()
     statements.add(new Statement(Statement.Effect.Allow)
-            .withActions(S3Actions.GetObject)
+            .withActions(S3Actions.GetObject, S3Actions.PutObject)
             .withResources(new com.amazonaws.auth.policy.Resource("arn:aws:s3:::${s3BucketName}/*"))
             .withPrincipals(new Principal("AWS", lambdaIamRoleArn, false)))
 
