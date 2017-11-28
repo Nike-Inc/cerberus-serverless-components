@@ -1,6 +1,13 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
-Description: Run rate limit lambda whenever S3 file is written to the ALB access log bucket
+Description: Creates the Lambda that will process the access logs for Cerberus
+Outputs:
+  LambdaLogProcessorFunctionArn:
+    Description: ARN of the log processor Lambda function
+    Value: !GetAtt LambdaLogProcessorFunction.Arn
+  LogProcessorLambdaRoleArn:
+    Description: ARN of the IAM role for the log processor Lambda
+    Value: !GetAtt LogProcessorLambdaRole.Arn
 Parameters:
   CerberusUrl:
     Type: String
@@ -33,8 +40,7 @@ Parameters:
     Type: String
     Description: The Slack HTTP endpoint to which the Lambda will post rate limit notifications
 Resources:
-  # Rate limiting Lambda function
-  LambdaWAFBlacklistingFunction:
+  LambdaLogProcessorFunction:
     Type: AWS::Serverless::Function
     Properties:
       Description: Function for auto black listing ips that are misbehaving
@@ -44,10 +50,10 @@ Resources:
       Runtime: java8
       MemorySize: 512
       Timeout: 60
-      Role: !GetAtt WAFLambdaRole.Arn
+      Role: !GetAtt LogProcessorLambdaRole.Arn
       Environment:
         Variables:
-          IAM_PRINCIPAL_ARN: !Ref WAFLambdaRole
+          IAM_PRINCIPAL_ARN: !GetAtt LogProcessorLambdaRole.Arn
           REGION: !Ref AWS::Region
           CERBERUS_URL: !Ref CerberusUrl
           ENVIRONMENT: !Ref CerberusEnvironment
@@ -62,14 +68,14 @@ Resources:
 
   LambdaInvokePermission:
     Type: AWS::Lambda::Permission
-    DependsOn: LambdaWAFBlacklistingFunction
+    DependsOn: LambdaLogProcessorFunction
     Properties:
       Action: lambda:*
-      FunctionName: !GetAtt 'LambdaWAFBlacklistingFunction.Arn'
+      FunctionName: !GetAtt 'LambdaLogProcessorFunction.Arn'
       Principal: s3.amazonaws.com
       SourceAccount: !Ref 'AWS::AccountId'
 
-  WAFLambdaRole:
+  LogProcessorLambdaRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
