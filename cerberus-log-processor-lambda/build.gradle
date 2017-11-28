@@ -89,8 +89,6 @@ task associateLambdaWithS3Bucket() {
                 .withRegion(region)
                 .build()
 
-        waitForStackCreation(cloudFormationClient, stackName)
-
         Stack stack = getCloudFormationStack(cloudFormationClient, stackName)
         String lambdaFunctionArn = getOutputValueForKey(stack, "LambdaLogProcessorFunctionArn")
         String lambdaIamRoleArn = getOutputValueForKey(stack, "LogProcessorLambdaRoleArn")
@@ -103,17 +101,6 @@ task associateLambdaWithS3Bucket() {
         addLambdaEventToS3Bucket(s3Client, albLogBucketName, lambdaFunctionArn)
         addLambdaPermissionToS3Bucket(s3Client, albLogBucketName, lambdaIamRoleArn)
     }
-}
-
-void waitForStackCreation(AmazonCloudFormation cloudFormationClient, String stackName) {
-    DescribeStacksRequest describeStacksRequest = new DescribeStacksRequest().withStackName(stackName)
-
-    cloudFormationClient.waiters()
-            .stackCreateComplete()
-            .run(new WaiterParameters<>(describeStacksRequest)
-                    .withPollingStrategy(new PollingStrategy(
-                            new MaxAttemptsRetryStrategy(10),
-                            new FixedDelayStrategy(5))))
 }
 
 Stack getCloudFormationStack(AmazonCloudFormation cloudFormationClient, String stackName) {
