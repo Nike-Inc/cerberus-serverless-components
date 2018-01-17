@@ -15,7 +15,7 @@ public class CloudFrontLogEvent {
         }
         data = logEntry.split("\\t");
 
-        if (data.length != 24) {
+        if (data.length != 26) {
             throw new IllegalArgumentException("You must supply a valid non empty CloudFront log entry, see http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/AccessLogs.html#LogFileFormat");
         }
     }
