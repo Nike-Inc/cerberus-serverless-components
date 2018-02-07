@@ -42,7 +42,9 @@ Map<String, String> getRegionBucketMap(String serializedMap) {
 
 String getProfileProperty(String key) {
     if (project.hasProperty(key)) {
-        return project."${key}"
+        def value = project."${key}"
+        logger.lifecycle("profile prop found: [ $key: $value ]")
+        return value
     } else {
         logger.warn("The project did not have extention property: ${key} for env: ${project.environment}, returning empty string")
         return ''

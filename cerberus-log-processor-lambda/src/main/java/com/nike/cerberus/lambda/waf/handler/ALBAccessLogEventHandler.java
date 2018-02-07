@@ -17,7 +17,6 @@ import com.fieldju.slackclient.SlackClient;
 import com.google.common.annotations.VisibleForTesting;
 import com.nike.cerberus.lambda.waf.ALBAccessLogEvent;
 import com.nike.cerberus.lambda.waf.LogProcessorLambdaConfig;
-import com.nike.cerberus.lambda.waf.processor.GoogleAnalyticsKPIProcessor;
 import com.nike.cerberus.lambda.waf.processor.Processor;
 import com.nike.cerberus.lambda.waf.processor.RateLimitingProcessor;
 import com.nike.cerberus.lambda.waf.processor.TlsVerificationProcessor;
@@ -59,6 +58,7 @@ public class ALBAccessLogEventHandler {
     public ALBAccessLogEventHandler(AmazonS3 amazonS3Client,
                                     AWSWAFRegional awsWaf,
                                     LogProcessorLambdaConfig logProcessorLambdaConfig) {
+
         this.amazonS3Client = amazonS3Client;
         this.logProcessorLambdaConfig = logProcessorLambdaConfig;
         objectMapper = new ObjectMapper();
@@ -68,7 +68,6 @@ public class ALBAccessLogEventHandler {
         // RateLimitingProcessor truncates the set and removes any ips from the set that it doesn't know about
         // see CloudFormationDefinedParams
         logEventProcessors.add(new RateLimitingProcessor(objectMapper, awsWaf, amazonS3Client));
-        logEventProcessors.add(new GoogleAnalyticsKPIProcessor());
         logEventProcessors.add(new TlsVerificationProcessor());
     }
 

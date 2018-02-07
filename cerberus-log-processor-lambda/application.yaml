@@ -30,9 +30,6 @@ Parameters:
   ViolationBlacklistDurationInMins:
     Type: Number
     Description: The number of minutes to blacklist an IP address for after it has violated the rate limit
-  GoogleAnalyticsId:
-    Type: String
-    Description: The ID of the Google Analytics account to which the Lambda will send KPIs
   SlackIcon:
     Type: String
     Description: URL of an icon image file to be used in Slack
@@ -62,7 +59,6 @@ Resources:
           RATE_LIMIT_AUTO_BLACKLIST_IP_SET_ID: !Ref RateLimitAutoBlacklistIpSetId
           REQUEST_PER_MIN_LIMIT: !Ref RequestPerMinuteLimit
           VIOLATION_BLACKLIST_DURATION_IN_MINS: !Ref ViolationBlacklistDurationInMins
-          GOOGLE_ANALYTICS_ID: !Ref GoogleAnalyticsId
           SLACK_ICON: !Ref SlackIcon
           SLACK_WEB_HOOK_URL: !Ref SlackWebHookUrl
 

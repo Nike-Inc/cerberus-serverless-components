@@ -20,14 +20,11 @@ public class LogProcessorLambdaConfig {
 
     private String slackIcon;
 
-    private String googleAnalyticsId;
-
     private String env;
 
     public LogProcessorLambdaConfig(String env, String manualWhitelistIpSetId, String manualBlacklistIpSetId,
                                     String rateLimitAutoBlacklistIpSetId, Integer blacklistDurationInMinutes,
-                                    Integer requestPerMinuteLimit, String slackWebHookUrl, String slackIcon,
-                                    String googleAnalyticsId) {
+                                    Integer requestPerMinuteLimit, String slackWebHookUrl, String slackIcon) {
         this.env = env;
         this.manualWhitelistIpSetId = manualWhitelistIpSetId;
         this.manualBlacklistIpSetId = manualBlacklistIpSetId;
@@ -36,7 +33,6 @@ public class LogProcessorLambdaConfig {
         this.requestPerMinuteLimit = requestPerMinuteLimit;
         this.slackWebHookUrl = slackWebHookUrl;
         this.slackIcon = slackIcon;
-        this.googleAnalyticsId = googleAnalyticsId;
     }
 
     public LogProcessorLambdaConfig() {
@@ -50,7 +46,6 @@ public class LogProcessorLambdaConfig {
                 EnvUtils.getEnvWithDefault("REQUEST_PER_MIN_LIMIT", "100"));
         slackIcon = EnvUtils.getEnvWithDefault("SLACK_ICON", ":wolf:");
         slackWebHookUrl = EnvUtils.getEnvWithDefault("SLACK_WEB_HOOK_URL", null);
-        googleAnalyticsId = EnvUtils.getEnvWithDefault("GOOGLE_ANALYTICS_ID", null);
     }
 
     public String getManualWhitelistIpSetId() {
@@ -107,14 +102,6 @@ public class LogProcessorLambdaConfig {
 
     public void setSlackIcon(String slackIcon) {
         this.slackIcon = slackIcon;
-    }
-
-    public String getGoogleAnalyticsId() {
-        return googleAnalyticsId;
-    }
-
-    public void setGoogleAnalyticsId(String googleAnalyticsId) {
-        this.googleAnalyticsId = googleAnalyticsId;
     }
 
     public String getEnv() {

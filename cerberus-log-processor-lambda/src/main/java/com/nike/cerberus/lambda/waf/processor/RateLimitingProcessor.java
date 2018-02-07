@@ -7,6 +7,7 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.waf.AWSWAFRegional;
+import com.amazonaws.services.waf.model.AWSWAFException;
 import com.amazonaws.services.waf.model.ChangeAction;
 import com.amazonaws.services.waf.model.GetChangeTokenRequest;
 import com.amazonaws.services.waf.model.GetChangeTokenResult;
@@ -32,6 +33,7 @@ import org.apache.log4j.Logger;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -120,7 +122,9 @@ public class RateLimitingProcessor implements Processor {
         ipsRemoved.stream().sorted().forEach(ip -> builder.append(ip).append(", "));
         builder.append("\n");
         builder.append("IP addresses added to auto block list: ");
-        ipsAdded.stream().sorted().forEach(ip -> builder.append(ip).append(", "));
+        ipsAdded.stream().sorted().forEach(ip -> {
+            builder.append(ip).append(" (").append(getHostnameForIp(ip)).append(")").append(", ");
+        });
         builder.append("\n");
         builder.append("IP addresses already on auto block list: ");
         ipsAlreadyBlocked.stream().sorted().forEach(ip -> builder.append(ip).append(", "));
@@ -130,6 +134,19 @@ public class RateLimitingProcessor implements Processor {
         SlackUtils.logMsgIfEnabled(text, config, "Rate-Limiting-Processor");
 
         log.info(text);
+    }
+
+    /**
+     * Gets the hostname for a given ip
+     */
+    private String getHostnameForIp(String ip) {
+        try {
+            InetAddress inetHost = InetAddress.getByName(ip);
+            return inetHost.getHostName();
+        } catch (Exception e) {
+            log.error(String.format("Failed to get hostname for ip: %s", ip), e);
+        }
+        return "hostname unknown";
     }
 
     /**
@@ -143,13 +160,13 @@ public class RateLimitingProcessor implements Processor {
         // Create a range set for ips we do not want to auto block that we can query
         RangeSet<Integer> doNotAutoBlockIpRangeSet = TreeRangeSet.create();
         // Collect and add to the do not auto block range set, the ranges of ips for the manual block list.
-        getIpSet(config.getManualBlacklistIpSetId()).forEach(subnetInfo -> {
+        getIpSet(config.getManualBlacklistIpSetId(), 0).forEach(subnetInfo -> {
             Integer lowIpAsInt = subnetInfo.asInteger(subnetInfo.getLowAddress());
             Integer highIpAsInt = subnetInfo.asInteger(subnetInfo.getHighAddress());
             doNotAutoBlockIpRangeSet.add(Range.closed(lowIpAsInt, highIpAsInt));
         });
         // Collect and add to the do not auto block range set, the ranges of ips for the manual whitelist list.
-        getIpSet(config.getManualWhitelistIpSetId()).forEach(subnetInfo -> {
+        getIpSet(config.getManualWhitelistIpSetId(), 0).forEach(subnetInfo -> {
             Integer lowIpAsInt = subnetInfo.asInteger(subnetInfo.getLowAddress());
             Integer highIpAsInt = subnetInfo.asInteger(subnetInfo.getHighAddress());
             doNotAutoBlockIpRangeSet.add(Range.closed(lowIpAsInt, highIpAsInt));
@@ -193,7 +210,7 @@ public class RateLimitingProcessor implements Processor {
         List<IPSetUpdate> updates = new LinkedList<>();
 
         // Remove ips from the auto blocked ip set that are not on our list, aka remove expired blocks
-        getIpSet(config.getRateLimitAutoBlacklistIpSetId()).forEach(subnetInfo -> {
+        getIpSet(config.getRateLimitAutoBlacklistIpSetId(), 0).forEach(subnetInfo -> {
             String ip = subnetInfo.getAddress();
             if (! ipToBlock.contains(ip)) {
                 String cidr = new SubnetUtils(ip, NETMASK_FOR_SINGLE_IP).getInfo().getCidrSignature();
@@ -282,10 +299,19 @@ public class RateLimitingProcessor implements Processor {
      * @param ipSetId The IP Set Id to look up in AWS
      * @return A List of Subnet Info objects that contain the IP Cidr info on what is in the IP Set
      */
-    protected List<SubnetUtils.SubnetInfo> getIpSet(String ipSetId) {
+    protected List<SubnetUtils.SubnetInfo> getIpSet(String ipSetId, int retryCount) {
         List<SubnetUtils.SubnetInfo> ips = new LinkedList<>();
 
-        GetIPSetResult result = awsWaf.getIPSet(new GetIPSetRequest().withIPSetId(ipSetId));
+        GetIPSetResult result = null;
+        try {
+            result = awsWaf.getIPSet(new GetIPSetRequest().withIPSetId(ipSetId));
+        } catch (AWSWAFException e) {
+            if (retryCount < 10) {
+                sleep(1, TimeUnit.SECONDS);
+                return getIpSet(ipSetId, retryCount + 1);
+            }
+            throw e;
+        }
         result.getIPSet().getIPSetDescriptors().forEach(ipSetDescriptor -> {
             if (IPSetDescriptorType.IPV4.toString().equals(ipSetDescriptor.getType())) {
                 SubnetUtils subnetUtils = new SubnetUtils(ipSetDescriptor.getValue());
@@ -295,6 +321,19 @@ public class RateLimitingProcessor implements Processor {
         });
 
         return ips;
+    }
+
+    /**
+     * Convenience method for sleep
+     * @param time
+     * @param timeUnit
+     */
+    private void sleep(int time, TimeUnit timeUnit) {
+        try {
+            Thread.sleep(timeUnit.toMillis(time));
+        } catch (InterruptedException e) {
+            throw new RuntimeException("failed to sleep");
+        }
     }
 
     /**

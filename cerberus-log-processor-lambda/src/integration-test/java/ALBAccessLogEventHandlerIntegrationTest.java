@@ -2,6 +2,7 @@ import com.amazonaws.services.lambda.runtime.events.S3Event;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.event.S3EventNotification;
 import com.amazonaws.services.waf.AWSWAFRegionalAsyncClientBuilder;
+import com.amazonaws.services.waf.AWSWAFRegionalClient;
 import com.fieldju.commons.PropUtils;
 import com.google.common.collect.Lists;
 import com.nike.cerberus.lambda.waf.LogProcessorLambdaConfig;
@@ -33,6 +34,7 @@ public class ALBAccessLogEventHandlerIntegrationTest {
 
         String environment = PropUtils.getRequiredProperty("CERBERUS_ENV");
         String bucketName = PropUtils.getRequiredProperty("S3_BUCKET_NAME");
+        String region = PropUtils.getRequiredProperty("REGION");
         String logKey = PropUtils.getRequiredProperty("S3_LOG_FILE_KEY");
         String manualBlacklistIpSetId = PropUtils.getRequiredProperty("BLACKLIST_IP_SET_ID");
         String manualWhitelistIpSetId = PropUtils.getRequiredProperty("WHITELIST_IP_SET_ID");
@@ -40,7 +42,7 @@ public class ALBAccessLogEventHandlerIntegrationTest {
 
         handler = new ALBAccessLogEventHandler(
                 new AmazonS3Client(),
-                AWSWAFRegionalAsyncClientBuilder.defaultClient(),
+                AWSWAFRegionalClient.builder().withRegion(region).build(),
                 new LogProcessorLambdaConfig(
                         environment,
                         manualWhitelistIpSetId,
@@ -48,7 +50,6 @@ public class ALBAccessLogEventHandlerIntegrationTest {
                         rateLimitAutoBlacklistIpSetId,
                         60,
                         100,
-                        null,
                         null,
                         null));
 
