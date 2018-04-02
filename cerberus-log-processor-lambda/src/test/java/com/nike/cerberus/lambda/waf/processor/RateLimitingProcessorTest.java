@@ -151,7 +151,7 @@ public class RateLimitingProcessorTest {
         SubnetUtils.SubnetInfo info = subnetUtils.getInfo();
         currentlyAutoBlocked.add(info);
 
-        doReturn(currentlyAutoBlocked).when(processor).getIpSet(fakeIpSet);
+        doReturn(currentlyAutoBlocked).when(processor).getIpSet(fakeIpSet, 0);
 
         Map<String, ViolationMetaData> violators = new HashMap<>();
 
@@ -182,7 +182,7 @@ public class RateLimitingProcessorTest {
         SubnetUtils.SubnetInfo info = subnetUtils.getInfo();
         currentlyAutoBlocked.add(info);
 
-        doReturn(currentlyAutoBlocked).when(processor).getIpSet(fakeIpSet);
+        doReturn(currentlyAutoBlocked).when(processor).getIpSet(fakeIpSet, 0);
 
         Map<String, ViolationMetaData> violators = new HashMap<>();
         violators.put("192.168.0.1", new ViolationMetaData(new Date(), 10));
@@ -196,7 +196,7 @@ public class RateLimitingProcessorTest {
     public void testThatProcessViolatorsAddsNewIpsToIpSet() {
         String fakeIpSet = "foo";
         when(config.getRateLimitAutoBlacklistIpSetId()).thenReturn(fakeIpSet);
-        doReturn(new LinkedList<>()).when(processor).getIpSet(fakeIpSet);
+        doReturn(new LinkedList<>()).when(processor).getIpSet(fakeIpSet, 0);
         Map<String, ViolationMetaData> violators = new HashMap<>();
         violators.put("192.168.0.1", new ViolationMetaData(new Date(), 10));
 
@@ -250,7 +250,7 @@ public class RateLimitingProcessorTest {
         when(ipSet.getIPSetDescriptors()).thenReturn(descriptors);
         when(awswaf.getIPSet(isA(GetIPSetRequest.class))).thenReturn(result);
 
-        List<SubnetUtils.SubnetInfo> list = processor.getIpSet("DOES NOT MATTER");
+        List<SubnetUtils.SubnetInfo> list = processor.getIpSet("DOES NOT MATTER", 0);
         assertTrue("The list should contain 3 items", list.size() == 3);
     }
 
@@ -275,7 +275,7 @@ public class RateLimitingProcessorTest {
         bSubnetUtils.setInclusiveHostCount(true);
         SubnetUtils.SubnetInfo bInfo = bSubnetUtils.getInfo();
         blackList.add(bInfo);
-        doReturn(blackList).when(processor).getIpSet(black);
+        doReturn(blackList).when(processor).getIpSet(black, 0);
 
         // stub the white list
         String white = "white";
@@ -286,7 +286,7 @@ public class RateLimitingProcessorTest {
         wSubnetUtils.setInclusiveHostCount(true);
         SubnetUtils.SubnetInfo wInfo = wSubnetUtils.getInfo();
         whiteList.add(wInfo);
-        doReturn(whiteList).when(processor).getIpSet(white);
+        doReturn(whiteList).when(processor).getIpSet(white, 0);
 
         RangeSet<Integer> doNotBlock = processor.getDoNotBlockRangeSet(config);
 
@@ -305,34 +305,11 @@ public class RateLimitingProcessorTest {
     }
 
     @Test
-    public void testThatProcessRequestBuildsAMapKeyedOffOfIpsToAMinutesAccuracy() {
-        Map<String, Integer> map = Maps.newHashMap();
-
-        ALBAccessLogEvent event1 = new ALBAccessLogEvent("h2 2017-10-02T17:48:55.882507Z app/foo/balancer 1.1.1.1:45745 2.2.0.8:8443 -1 -1 -1 504 - 265 620 \"GET https://cerberus.oss.nike.com:443/dashboard/ HTTP/2.0\" \"User Agent stuff\" ECDHE-RSA-AES128-GCM-SHA256 TLSv1.2 arn:aws:elasticloadbalancing:us-west-2:00000:targetgroup/target-group-name/99cbf5b80ac385c5 \"Root=1-59d27be8-3ef5870d62321261398f1a8c\" \"cerberus.oss.nike.com\" \"arn:aws:iam::0000:server-certificate/group/cerb/env/cms_1111\"");
-        ALBAccessLogEvent event2 = new ALBAccessLogEvent("h2 2017-10-02T17:49:55.882507Z app/foo/balancer 1.1.1.2:45745 2.2.0.8:8443 -1 -1 -1 504 - 265 620 \"GET https://cerberus.oss.nike.com:443/dashboard/ HTTP/2.0\" \"User Agent stuff\" ECDHE-RSA-AES128-GCM-SHA256 TLSv1.2 arn:aws:elasticloadbalancing:us-west-2:00000:targetgroup/target-group-name/99cbf5b80ac385c5 \"Root=1-59d27be8-3ef5870d62321261398f1a8c\" \"cerberus.oss.nike.com\" \"arn:aws:iam::0000:server-certificate/group/cerb/env/cms_1111\"");
-        ALBAccessLogEvent event4 = new ALBAccessLogEvent("h2 2017-10-02T17:50:55.882507Z app/foo/balancer 1.1.1.3:45745 2.2.0.8:8443 -1 -1 -1 504 - 265 620 \"GET https://cerberus.oss.nike.com:443/dashboard/ HTTP/2.0\" \"User Agent stuff\" ECDHE-RSA-AES128-GCM-SHA256 TLSv1.2 arn:aws:elasticloadbalancing:us-west-2:00000:targetgroup/target-group-name/99cbf5b80ac385c5 \"Root=1-59d27be8-3ef5870d62321261398f1a8c\" \"cerberus.oss.nike.com\" \"arn:aws:iam::0000:server-certificate/group/cerb/env/cms_1111\"");
-        ALBAccessLogEvent event3 = new ALBAccessLogEvent("h2 2017-10-02T17:48:55.882507Z app/foo/balancer 1.1.1.1:45745 2.2.0.8:8443 -1 -1 -1 504 - 265 620 \"GET https://cerberus.oss.nike.com:443/dashboard/ HTTP/2.0\" \"User Agent stuff\" ECDHE-RSA-AES128-GCM-SHA256 TLSv1.2 arn:aws:elasticloadbalancing:us-west-2:00000:targetgroup/target-group-name/99cbf5b80ac385c5 \"Root=1-59d27be8-3ef5870d62321261398f1a8c\" \"cerberus.oss.nike.com\" \"arn:aws:iam::0000:server-certificate/group/cerb/env/cms_1111\"");
-
-        processor.processRequest(event1, map);
-        processor.processRequest(event2, map);
-        processor.processRequest(event3, map);
-        processor.processRequest(event4, map);
-
-        assertTrue("There should be 3 entries because 2 entries are for the same IP in the same minute", map.size() == 3);
-        assertTrue(map.containsKey("2017-10-02--17:48--1.1.1.1"));
-        assertTrue(map.get("2017-10-02--17:48--1.1.1.1") == 2);
-        assertTrue(map.containsKey("2017-10-02--17:49--1.1.1.2"));
-        assertTrue(map.get("2017-10-02--17:49--1.1.1.2") == 1);
-        assertTrue(map.containsKey("2017-10-02--17:50--1.1.1.3"));
-        assertTrue(map.get("2017-10-02--17:50--1.1.1.3") == 1);
-    }
-
-    @Test
     public void testThatGetCurrentViolatorsReturnsAMapOfIpAddressToMetaData() {
-        when(config.getRequestPerMinuteLimit()).thenReturn(2);
+        when(config.getRequestPerHourLimit()).thenReturn(2);
         Map<String, Integer> map = Maps.newHashMap();
-        map.put("2016-09-21--21:26--108.171.135.164", 10);
-        map.put("2016-09-21--21:26--108.171.135.160", 1);
+        map.put("108.171.135.164", 10);
+        map.put("108.171.135.160", 1);
 
         Map<String, ViolationMetaData> violators = processor.getCurrentViolators(map, config);
 
@@ -343,10 +320,10 @@ public class RateLimitingProcessorTest {
 
     @Test
     public void testThatGetCurrentViolatorsReturnsAMapOfIpAddressToMetaDataAndContainsTheHighestRate() {
-        when(config.getRequestPerMinuteLimit()).thenReturn(2);
+        when(config.getRequestPerHourLimit()).thenReturn(2);
         Map<String, Integer> map = Maps.newHashMap();
-        map.put("2016-09-21--21:27--109.171.135.160", 10);
-        map.put("2016-09-21--21:28--109.171.135.160", 20);
+        map.put("109.171.135.160", 10);
+        map.put("109.171.135.160", 20);
 
         Map<String, ViolationMetaData> violators = processor.getCurrentViolators(map, config);
 
@@ -354,19 +331,4 @@ public class RateLimitingProcessorTest {
         assertTrue("The map should should contain 109.171.135.164", violators.containsKey("109.171.135.160"));
         assertTrue(violators.get("109.171.135.160").getMaxRate() == 20);
     }
-
-    @Test
-    public void testThatGetCurrentViolatorsReturnsAMapOfIpAddressToMetaDataAndContainsTheHighestRate2() {
-        when(config.getRequestPerMinuteLimit()).thenReturn(2);
-        Map<String, Integer> map = Maps.newHashMap();
-        map.put("2016-09-21--21:27--109.171.135.160", 200);
-        map.put("2016-09-21--21:28--109.171.135.160", 10);
-
-        Map<String, ViolationMetaData> violators = processor.getCurrentViolators(map, config);
-
-        assertTrue("The map should have one violator", violators.size() == 1);
-        assertTrue("The map should should contain 109.171.135.164", violators.containsKey("109.171.135.160"));
-        assertTrue(violators.get("109.171.135.160").getMaxRate() == 200);
-    }
-
 }

@@ -1,8 +1,9 @@
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.lambda.runtime.events.S3Event;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.event.S3EventNotification;
-import com.amazonaws.services.waf.AWSWAFRegionalAsyncClientBuilder;
 import com.amazonaws.services.waf.AWSWAFRegionalClient;
+import com.fieldju.commons.EnvUtils;
 import com.fieldju.commons.PropUtils;
 import com.google.common.collect.Lists;
 import com.nike.cerberus.lambda.waf.LogProcessorLambdaConfig;
@@ -39,6 +40,11 @@ public class ALBAccessLogEventHandlerIntegrationTest {
         String manualBlacklistIpSetId = PropUtils.getRequiredProperty("BLACKLIST_IP_SET_ID");
         String manualWhitelistIpSetId = PropUtils.getRequiredProperty("WHITELIST_IP_SET_ID");
         String rateLimitAutoBlacklistIpSetId = PropUtils.getRequiredProperty("RATE_LIMIT_IP_SET_ID");
+        String athenaDatabaseName = EnvUtils.getRequiredEnv("ATHENA_DATABASE_NAME");
+        String athenaTableName = EnvUtils.getRequiredEnv("ATHENA_TABLE_NAME");
+        String albLogBucketName = EnvUtils.getRequiredEnv("ALB_LOG_BUCKET");
+        String athenaQueryResultBucketName = EnvUtils.getRequiredEnv("ATHENA_QUERY_RESULT_BUCKET_NAME");
+        String iamPrincipalArn = EnvUtils.getRequiredEnv("IAM_PRINCIPAL_ARN");
 
         handler = new ALBAccessLogEventHandler(
                 new AmazonS3Client(),
@@ -51,7 +57,13 @@ public class ALBAccessLogEventHandlerIntegrationTest {
                         60,
                         100,
                         null,
-                        null));
+                        null,
+                        athenaDatabaseName,
+                        athenaTableName,
+                        athenaQueryResultBucketName,
+                        albLogBucketName,
+                        iamPrincipalArn,
+                        Regions.fromName(region)));
 
         List<S3EventNotification.S3EventNotificationRecord> records = Lists.newArrayList();
         S3EventNotification.S3EventNotificationRecord record = mock(S3EventNotification.S3EventNotificationRecord.class);
@@ -75,7 +87,7 @@ public class ALBAccessLogEventHandlerIntegrationTest {
     public void endToEndTest() throws IOException {
         // this test doesn't actually assert anything, but it allows me to trigger the lambda in a
         // controlled way and verify things manually, and attach a debugger to real running code
-        handler.handleNewS3Event(event);
+        handler.handleScheduledEvent();
     }
 
 }

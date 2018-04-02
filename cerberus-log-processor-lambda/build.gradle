@@ -18,10 +18,6 @@ import com.amazonaws.services.cloudformation.AmazonCloudFormationClientBuilder
 import com.amazonaws.services.cloudformation.model.DescribeStacksRequest
 import com.amazonaws.services.cloudformation.model.Output
 import com.amazonaws.services.cloudformation.model.Stack
-import com.amazonaws.waiters.FixedDelayStrategy
-import com.amazonaws.waiters.MaxAttemptsRetryStrategy
-import com.amazonaws.waiters.PollingStrategy
-import com.amazonaws.waiters.WaiterParameters
 
 buildscript {
     apply from: file(project.getRootProject().getRootDir().getPath() + File.separator + "gradle/buildscript.gradle"), to: buildscript
@@ -42,6 +38,7 @@ dependencies {
     compile group: 'com.fieldju', name: 'slack-client', version: '2.0.0'
     compile group: 'com.brsanthu', name: 'google-analytics-java', version: '1.1.2'
     compile group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.272'
+    compile group: 'com.amazonaws', name: 'aws-java-sdk-athena', version: '1.11.301'
 
     testCompile group: 'junit', name: 'junit', version: '4.12'
     testCompile group: 'org.mockito', name: 'mockito-all', version: '1.9.5'
@@ -65,12 +62,17 @@ shadowJar {
             CerberusUrl: getProfileProperty('cerberus.url'),
             CerberusEnvironment: "${project.environment}",
             ViolationBlacklistDurationInMins: getProfileProperty('log_processor.violation_blacklist_duration_in_mins'),
-            RequestPerMinuteLimit: getProfileProperty('log_processor.request_per_minute_limit'),
+            RequestPerHourLimit: getProfileProperty('log_processor.request_per_hour_limit'),
             SlackWebHookUrl: getProfileProperty('log_processor.slack_web_hook_url'),
             SlackIcon: getProfileProperty('log_processor.slack_cerberus_icon'),
             ManualBlacklistIpSetId: getProfileProperty('log_processor.manual_blacklist_ip_set_id'),
             ManualWhitelistIpSetId: getProfileProperty('log_processor.manual_whitelist_ip_set_id'),
-            RateLimitAutoBlacklistIpSetId: getProfileProperty('log_processor.auto_blacklist_ip_set_id')
+            RateLimitAutoBlacklistIpSetId: getProfileProperty('log_processor.auto_blacklist_ip_set_id'),
+            AthenaDatabaseName: getProfileProperty('log_processor.athena_database_name'),
+            AthenaTableName: getProfileProperty('log_processor.athena_table_name'),
+            AthenaQueryResultBucketName: getProfileProperty('log_processor.athena_query_result_bucket_name'),
+            AlbLogBucket: getProfileProperty('log_processor.alb_log_bucket'),
+            AlbLogBucketArn: "arn:aws:s3:::" + getProfileProperty('log_processor.alb_log_bucket')
     ]
     logStackOutputs = true
 }
@@ -98,7 +100,6 @@ task associateLambdaWithS3Bucket() {
                 .withRegion(region)
                 .build()
 
-        addLambdaEventToS3Bucket(s3Client, albLogBucketName, lambdaFunctionArn)
         addLambdaPermissionToS3Bucket(s3Client, albLogBucketName, lambdaIamRoleArn)
     }
 }
@@ -108,21 +109,6 @@ Stack getCloudFormationStack(AmazonCloudFormation cloudFormationClient, String s
             new DescribeStacksRequest().withStackName(stackName))
                 .getStacks()
                 .get(0)
-}
-
-void addLambdaEventToS3Bucket(AmazonS3 s3Client, String s3BucketName, String lambdaFunctionArn) {
-    FilterRule s3KeyFilterRule = S3KeyFilter.FilterRuleName.Suffix.newRule(".log.gz")
-    S3KeyFilter s3KeyFilter = new S3KeyFilter().withFilterRules(s3KeyFilterRule)
-    Filter eventFilter = new Filter().withS3KeyFilter(s3KeyFilter)
-    LambdaConfiguration lambdaConfiguration = new LambdaConfiguration(lambdaFunctionArn, EnumSet.of(S3Event.ObjectCreated))
-    lambdaConfiguration.setFilter(eventFilter)
-
-    BucketNotificationConfiguration bucketNotificationConfiguration = s3Client.getBucketNotificationConfiguration(s3BucketName)
-
-    bucketNotificationConfiguration.addConfiguration("logProcessorNotificationConfig", lambdaConfiguration)
-
-    s3Client.setBucketNotificationConfiguration(s3BucketName, bucketNotificationConfiguration)
-    println "Added lambda notification to S3 bucket: ${s3BucketName}"
 }
 
 void addLambdaPermissionToS3Bucket(AmazonS3 s3Client, String s3BucketName, String lambdaIamRoleArn) {

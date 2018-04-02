@@ -1,10 +1,10 @@
 package com.nike.cerberus.lambda.waf;
 
-import com.google.common.base.Splitter;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,17 +24,10 @@ import java.util.regex.Pattern;
 public class ALBAccessLogEvent {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    /* Magic regex to split values on spaces, EXCEPT if the value is wrapped in quotes
-     *
-     * Ex.  foo "baz foobar" bar => [foo, "baz foobar", bar]
-     *
-     * https://stackoverflow.com/questions/1757065/java-splitting-a-comma-separated-string-but-ignoring-commas-in-quotes
-    */
-    private static final Pattern LOG_SPLIT_PATTERN = Pattern.compile(" (?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+    // same regex pattern used in Athena https://docs.aws.amazon.com/athena/latest/ug/application-load-balancer-logs.html
+    private static final Pattern LOG_MATCH_PATTERN = Pattern.compile("([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*):([0-9]*) ([^ ]*)[:-]([0-9]*) ([-.0-9]*) ([-.0-9]*) ([-.0-9]*) (|[-0-9]*) (-|[-0-9]*) ([-0-9]*) ([-0-9]*) \"([^ ]*) ([^ ]*) (- |[^ ]*)\" (\"[^\"]*\") ([A-Z0-9-]+) ([A-Za-z0-9.-]*) ([^ ]*) (.*) (.*) (.*)");
 
-    private static final int NUM_LOG_ENTRY_PARTS = 20;
-
-    private static final String HTTP_METHOD_KEY = "httpMethod";
+    private static final int NUM_LOG_ENTRY_PARTS = 25;
 
     private static final String FULL_URL_KEY = "url";
 
@@ -46,34 +39,44 @@ public class ALBAccessLogEvent {
 
     private static final String REQUEST_URI_KEY = "uri";
 
-    private static final String HTTP_VERSION_KEY = "httpVersion";
-
     // regex for the "request" field in the ALB access log  (format: "GET https://cerberus.oss.nike.com:443/dashboard HTTP/2.0")
     private static final String REQUEST_FIELD_PATTERN_STR = String.format(
-            "(?<%s>.*) (?<%s>(?<%s>.*)://(?<%s>.*):(?<%s>\\d*)(?<%s>/.*)) (?<%s>.*)",
-            HTTP_METHOD_KEY,
+            "(?<%s>(?<%s>.*)://(?<%s>.*):(?<%s>\\d*)(?<%s>/.*))",
             FULL_URL_KEY,
             PROTOCOL_KEY,
             HOSTNAME_KEY,
             REQUEST_PORT_KEY,
-            REQUEST_URI_KEY,
-            HTTP_VERSION_KEY);
+            REQUEST_URI_KEY);
 
     private static final Pattern REQUEST_FIELD_PATTERN = Pattern.compile(REQUEST_FIELD_PATTERN_STR);
 
     private final List<String> data;
 
     public ALBAccessLogEvent(String logEntry) {
+        data = new ArrayList<>();
         if (logEntry == null || logEntry.equals("")) {
             throw new IllegalArgumentException("You must supply a valid non empty ALB access log entry, see " +
                     "http://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-access-logs.html");
         }
 
-        data = Splitter.on(LOG_SPLIT_PATTERN).splitToList(logEntry);
-        if (data.size() != NUM_LOG_ENTRY_PARTS) {
+        Matcher matcher = LOG_MATCH_PATTERN.matcher(logEntry);
+        // -1 because log entry doesn't carry partition info
+        if (matcher.matches() && matcher.groupCount() == NUM_LOG_ENTRY_PARTS - 1){
+            for (int i = 1; i <= matcher.groupCount(); i++) {
+                data.add(matcher.group(i));
+            }
+        } else {
             throw new IllegalArgumentException("You must supply a valid non empty ALB access log entry, see " +
                     "http://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-access-logs.html");
         }
+    }
+
+    public ALBAccessLogEvent(List<String> logRow) {
+        if (logRow == null || logRow.size() != NUM_LOG_ENTRY_PARTS){
+            throw new IllegalArgumentException("You must supply a valid non empty ALB access log entry, see " +
+                    "http://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-access-logs.html");
+        }
+        data = logRow;
     }
 
     /**
@@ -106,18 +109,14 @@ public class ALBAccessLogEvent {
      * @return The IP address of the client that made this request
      */
     public String getRequestingClientIp() {
-        String clientIpAndPortStr = data.get(3);
-        String[] clientIpAndPort = clientIpAndPortStr.split(":");
-        return clientIpAndPort[0];
+        return data.get(3);
     }
 
     /**
      * @return The port on which the client made this request
      */
     public String getRequestingClientPort() {
-        String clientIpAndPortStr = data.get(3);
-        String[] clientIpAndPort = clientIpAndPortStr.split(":");
-        return clientIpAndPort[1];
+        return data.get(4);
     }
 
     /**
@@ -127,14 +126,7 @@ public class ALBAccessLogEvent {
      * the AWS WAF blocked the request.
      */
     public String getTargetIp() {
-        String targetIpAndPortStr = data.get(4);
-        if (targetIpAndPortStr.equals("-")) {
-            logger.warn("Target IP address is empty. Either the client did not send a full request or the AWS WAF blocked the request");
-            return targetIpAndPortStr;
-        }
-
-        String[] targetIpAndPort = targetIpAndPortStr.split(":");
-        return targetIpAndPort[0];
+        return data.get(5);
     }
 
     /**
@@ -144,14 +136,7 @@ public class ALBAccessLogEvent {
      * the AWS WAF blocked the request.
      */
     public String getTargetPort() {
-        String targetIpAndPortStr = data.get(4);
-        if (targetIpAndPortStr.equals("-")) {
-            logger.warn("Target port is empty. Either the client did not send a full request or the AWS WAF blocked the request");
-            return targetIpAndPortStr;
-        }
-
-        String[] targetIpAndPort = targetIpAndPortStr.split(":");
-        return targetIpAndPort[1];
+        return data.get(6);
     }
 
     /**
@@ -162,7 +147,7 @@ public class ALBAccessLogEvent {
      * target closes the connection before the idle timeout, or if the client sends a malformed request.
      */
     public String getRequestProcessingTime() {
-        return data.get(5);
+        return data.get(7);
     }
 
     /**
@@ -173,7 +158,7 @@ public class ALBAccessLogEvent {
      * target closes the connection before the idle timeout, or if the client sends a malformed request.
      */
     public String getTargetProcessingTime() {
-        return data.get(6);
+        return data.get(8);
     }
 
     /**
@@ -185,14 +170,14 @@ public class ALBAccessLogEvent {
      * target closes the connection before the idle timeout, or if the client sends a malformed request.     *
      */
     public String getResponseProcessingTime() {
-        return data.get(7);
+        return data.get(9);
     }
 
     /**
      * @return The status code of the response from the load balancer
      */
     public String getLoadBalancerStatusCode() {
-        return data.get(8);
+        return data.get(10);
     }
 
     /**
@@ -201,35 +186,35 @@ public class ALBAccessLogEvent {
      * If this value is "-", then a connection to the target could not be established, or the target did not send a response
      */
     public String getTargetStatusCode() {
-        return data.get(9);
+        return data.get(11);
     }
 
     /**
      * @return The total number of bytes in the request (in bytes) received from the client
      */
     public String getBytesReceived() {
-        return data.get(10);
+        return data.get(12);
     }
 
     /**
      * @return The total number of bytes sent in response to the client's request
      */
     public String getBytesSent() {
-        return data.get(11);
+        return data.get(13);
     }
 
     /**
      * @return The HTTP request method: DELETE, GET, HEAD, OPTIONS, PATCH, POST, or PUT.
      */
     public String getHttpMethod() {
-        return getValueFromRequestField(HTTP_METHOD_KEY);
+        return data.get(14);
     }
 
     /**
      * @return The full request URL
      */
     public String getRequestUrl() {
-        return getValueFromRequestField(FULL_URL_KEY);
+        return data.get(15);
     }
 
     /**
@@ -257,7 +242,7 @@ public class ALBAccessLogEvent {
      * @return The HTTP version used in the request (e.g. HTTP/2.0)
      */
     public String getHttpVersion() {
-        return getValueFromRequestField(HTTP_VERSION_KEY);
+        return data.get(16);
     }
 
     /**
@@ -266,7 +251,7 @@ public class ALBAccessLogEvent {
      * Consists of one or more product identifiers, product[/version]. If the string is longer than 8 KB, it is truncated.
      */
     public String getUserAgent() {
-        return data.get(13);
+        return data.get(17);
     }
 
     /**
@@ -275,7 +260,7 @@ public class ALBAccessLogEvent {
      * If this value is "-", then client connection negotiation was unsuccessful or the call was made over HTTP
      */
     public String getSslCipher() {
-        return data.get(14);
+        return data.get(18);
     }
 
     /**
@@ -284,18 +269,18 @@ public class ALBAccessLogEvent {
      * If this value is "-", then client connection negotiation was unsuccessful or the call was made over HTTP
      */
     public String getSslProtocol() {
-        return data.get(15);
+        return data.get(19);
     }
 
     /**
      * @return The ARN of the target group that handled the request
      */
     public String getTargetGroupArn() {
-        return data.get(16);
+        return data.get(20);
     }
 
     private String getValueFromRequestField(String valueName) {
-        Matcher request = REQUEST_FIELD_PATTERN.matcher(data.get(12));
+        Matcher request = REQUEST_FIELD_PATTERN.matcher(data.get(15));
         if (! request.find()) {
             return null;
         }
