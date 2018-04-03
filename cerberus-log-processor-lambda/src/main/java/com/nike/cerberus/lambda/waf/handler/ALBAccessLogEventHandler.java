@@ -111,7 +111,8 @@ public class ALBAccessLogEventHandler {
      * @return a list of AppLoadBalancerLogEvents to be processed by the processors
      */
     protected List<ALBAccessLogEvent> getLogEvents() {
-        DateTime oneHourBeforeNow = DateTime.now().minus(3600 *1000);
+        Integer intervalInMins = logProcessorLambdaConfig.getIntervalInMins();
+        DateTime oneHourBeforeNow = DateTime.now().minus(intervalInMins * 60 * 1000);
         return athenaService.getLogEntrysAfter(oneHourBeforeNow).stream()
                 .map(ALBAccessLogEvent::new).collect(Collectors.toList());
     }

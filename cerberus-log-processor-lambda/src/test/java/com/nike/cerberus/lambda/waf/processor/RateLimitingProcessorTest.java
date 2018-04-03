@@ -21,7 +21,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
 import com.google.common.collect.RangeSet;
 import com.google.common.collect.TreeRangeSet;
-import com.nike.cerberus.lambda.waf.ALBAccessLogEvent;
 import com.nike.cerberus.lambda.waf.LogProcessorLambdaConfig;
 import com.nike.cerberus.lambda.waf.ViolationMetaData;
 import org.apache.commons.net.util.SubnetUtils;
@@ -306,7 +305,7 @@ public class RateLimitingProcessorTest {
 
     @Test
     public void testThatGetCurrentViolatorsReturnsAMapOfIpAddressToMetaData() {
-        when(config.getRequestPerHourLimit()).thenReturn(2);
+        when(config.getRequestPerIntervalLimit()).thenReturn(2);
         Map<String, Integer> map = Maps.newHashMap();
         map.put("108.171.135.164", 10);
         map.put("108.171.135.160", 1);
@@ -320,7 +319,7 @@ public class RateLimitingProcessorTest {
 
     @Test
     public void testThatGetCurrentViolatorsReturnsAMapOfIpAddressToMetaDataAndContainsTheHighestRate() {
-        when(config.getRequestPerHourLimit()).thenReturn(2);
+        when(config.getRequestPerIntervalLimit()).thenReturn(2);
         Map<String, Integer> map = Maps.newHashMap();
         map.put("109.171.135.160", 10);
         map.put("109.171.135.160", 20);

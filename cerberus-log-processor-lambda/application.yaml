@@ -24,9 +24,12 @@ Parameters:
   RateLimitAutoBlacklistIpSetId:
     Type: String
     Description: The ID of the Cerberus manual auto-blacklist IP set.
-  RequestPerHourLimit:
+  RequestPerIntervalLimit:
     Type: Number
-    Description: The number of requests per hour allowed per IP address
+    Description: The number of requests per interval allowed per IP address
+  IntervalInMins:
+    Type: Number
+    Description: The interval in minutes of requests per interval allowed per IP address
   ViolationBlacklistDurationInMins:
     Type: Number
     Description: The number of minutes to blacklist an IP address for after it has violated the rate limit
@@ -77,7 +80,9 @@ Resources:
           MANUAL_BLACKLIST_IP_SET_ID: !Ref ManualBlacklistIpSetId
           MANUAL_WHITELIST_IP_SET_ID: !Ref ManualWhitelistIpSetId
           RATE_LIMIT_AUTO_BLACKLIST_IP_SET_ID: !Ref RateLimitAutoBlacklistIpSetId
-          REQUEST_PER_HOUR_LIMIT: !Ref RequestPerHourLimit
+          REQUEST_PER_INTERVAL_LIMIT: !Ref
+          RequestPerIntervalLimit
+          INTERVAL_IN_MINS: !Ref IntervalInMins
           VIOLATION_BLACKLIST_DURATION_IN_MINS: !Ref ViolationBlacklistDurationInMins
           SLACK_ICON: !Ref SlackIcon
           SLACK_WEB_HOOK_URL: !Ref SlackWebHookUrl

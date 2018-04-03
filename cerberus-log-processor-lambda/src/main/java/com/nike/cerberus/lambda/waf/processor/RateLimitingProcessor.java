@@ -366,7 +366,7 @@ public class RateLimitingProcessor implements Processor {
 
         // instead of using minute of hour as part of the key, assume that only the log within the last hour is provided
         reqIdCountMap.entrySet().stream()
-                .filter(entry -> entry.getValue() > params.getRequestPerHourLimit())
+                .filter(entry -> entry.getValue() > params.getRequestPerIntervalLimit())
                 .forEach(entry -> {
                     String ip = entry.getKey();
                     if (violators.containsKey(ip)) {

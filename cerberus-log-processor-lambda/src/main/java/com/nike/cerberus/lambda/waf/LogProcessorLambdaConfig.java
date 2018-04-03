@@ -15,7 +15,9 @@ public class LogProcessorLambdaConfig {
 
     private Integer blacklistDurationInMinutes;
 
-    private Integer requestPerHourLimit;
+    private Integer requestPerIntervalLimit;
+
+    private Integer intervalInMins;
 
     private String slackWebHookUrl;
 
@@ -37,8 +39,8 @@ public class LogProcessorLambdaConfig {
 
     public LogProcessorLambdaConfig(String env, String manualWhitelistIpSetId, String manualBlacklistIpSetId,
                                     String rateLimitAutoBlacklistIpSetId, Integer blacklistDurationInMinutes,
-                                    Integer requestPerHourLimit, String slackWebHookUrl, String slackIcon,
-                                    String athenaDatabaseName, String athenaTableName,
+                                    Integer requestPerIntervalLimit, Integer intervalInMins, String slackWebHookUrl,
+                                    String slackIcon, String athenaDatabaseName, String athenaTableName,
                                     String athenaQueryResultBucketName, String albLogBucketName,
                                     String iamPrincipalArn, Regions region) {
         this.env = env;
@@ -46,7 +48,8 @@ public class LogProcessorLambdaConfig {
         this.manualBlacklistIpSetId = manualBlacklistIpSetId;
         this.rateLimitAutoBlacklistIpSetId = rateLimitAutoBlacklistIpSetId;
         this.blacklistDurationInMinutes = blacklistDurationInMinutes;
-        this.requestPerHourLimit = requestPerHourLimit;
+        this.requestPerIntervalLimit = requestPerIntervalLimit;
+        this.intervalInMins = intervalInMins;
         this.slackWebHookUrl = slackWebHookUrl;
         this.slackIcon = slackIcon;
         this.athenaDatabaseName = athenaDatabaseName;
@@ -64,8 +67,10 @@ public class LogProcessorLambdaConfig {
         rateLimitAutoBlacklistIpSetId = EnvUtils.getRequiredEnv("RATE_LIMIT_AUTO_BLACKLIST_IP_SET_ID");
         blacklistDurationInMinutes = Integer.parseInt(
                 EnvUtils.getEnvWithDefault("VIOLATION_BLACKLIST_DURATION_IN_MINS", "60"));
-        requestPerHourLimit = Integer.parseInt(
-                EnvUtils.getEnvWithDefault("REQUEST_PER_HOUR_LIMIT", "100"));
+        requestPerIntervalLimit = Integer.parseInt(
+                EnvUtils.getEnvWithDefault("REQUEST_PER_INTERVAL_LIMIT", "300"));
+        intervalInMins = Integer.parseInt(
+                EnvUtils.getEnvWithDefault("INTERVAL_IN_MINS", "20"));
         slackIcon = EnvUtils.getEnvWithDefault("SLACK_ICON", ":wolf:");
         slackWebHookUrl = EnvUtils.getEnvWithDefault("SLACK_WEB_HOOK_URL", null);
         athenaDatabaseName = EnvUtils.getRequiredEnv("ATHENA_DATABASE_NAME");
@@ -108,12 +113,20 @@ public class LogProcessorLambdaConfig {
         this.blacklistDurationInMinutes = blacklistDurationInMinutes;
     }
 
-    public Integer getRequestPerHourLimit() {
-        return requestPerHourLimit;
+    public Integer getRequestPerIntervalLimit() {
+        return requestPerIntervalLimit;
     }
 
-    public void setRequestPerHourLimit(Integer requestPerHourLimit) {
-        this.requestPerHourLimit = requestPerHourLimit;
+    public void setRequestPerIntervalLimit(Integer requestPerIntervalLimit) {
+        this.requestPerIntervalLimit = requestPerIntervalLimit;
+    }
+
+    public Integer getIntervalInMins() {
+        return intervalInMins;
+    }
+
+    public void setIntervalInMins(Integer intervalInMins) {
+        this.intervalInMins = intervalInMins;
     }
 
     public String getSlackWebHookUrl() {
