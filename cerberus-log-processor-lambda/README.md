@@ -11,7 +11,7 @@ To learn more about Cerberus, please see the [Cerberus website](http://engineeri
 ## Processors
 
 ### Rate Limiting Processor
-This processor will query Athena and ensures that ips that show up more than the requests per hour limit are added to the auto block list for the Cerberus Env WAF
+This processor will query Athena and ensures that ips that show up more than the requests per interval limit are added to the auto block list for the Cerberus Env WAF
 
 ### Future Processors
 We would like to have a processor for auto blocking ips that spam bad requests.

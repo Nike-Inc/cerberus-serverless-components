@@ -353,7 +353,7 @@ public class RateLimitingProcessor implements Processor {
     }
 
     /**
-     * Process the map we created and ensure that keys in the map that have values greater than the rate limit per hour
+     * Process the map we created and ensure that keys in the map that have values greater than the rate limit per interval
      * get processed and dealt with.
      *
      * @param reqIdCountMap The map of request ids to request count, this assumes the requests are grouped by IPs combined with time to a minutes accuracy
@@ -364,7 +364,7 @@ public class RateLimitingProcessor implements Processor {
         Date now = new Date();
         Map<String, ViolationMetaData> violators = Maps.newHashMap();
 
-        // instead of using minute of hour as part of the key, assume that only the log within the last hour is provided
+        // instead of using minute of hour as part of the key, assume that only the logs within the last interval is provided
         reqIdCountMap.entrySet().stream()
                 .filter(entry -> entry.getValue() > params.getRequestPerIntervalLimit())
                 .forEach(entry -> {

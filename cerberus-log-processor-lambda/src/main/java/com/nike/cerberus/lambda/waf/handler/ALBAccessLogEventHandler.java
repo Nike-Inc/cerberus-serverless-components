@@ -75,7 +75,7 @@ public class ALBAccessLogEventHandler {
 
     /**
      * The handler that's triggered by a scheduled event.
-     * Query Athena for requests made to Cerberus within the last hour.
+     * Query Athena for requests made to Cerberus within the last interval.
      * http://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-access-logs.html
      */
     public void handleScheduledEvent() {
@@ -112,8 +112,8 @@ public class ALBAccessLogEventHandler {
      */
     protected List<ALBAccessLogEvent> getLogEvents() {
         Integer intervalInMins = logProcessorLambdaConfig.getIntervalInMins();
-        DateTime oneHourBeforeNow = DateTime.now().minusMinutes(intervalInMins);
-        return athenaService.getLogEntrysAfter(oneHourBeforeNow).stream()
+        DateTime intervalBeforeNow = DateTime.now().minusMinutes(intervalInMins);
+        return athenaService.getLogEntrysAfter(intervalBeforeNow).stream()
                 .map(ALBAccessLogEvent::new).collect(Collectors.toList());
     }
 
