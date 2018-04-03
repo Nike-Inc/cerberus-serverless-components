@@ -112,7 +112,7 @@ public class ALBAccessLogEventHandler {
      */
     protected List<ALBAccessLogEvent> getLogEvents() {
         Integer intervalInMins = logProcessorLambdaConfig.getIntervalInMins();
-        DateTime oneHourBeforeNow = DateTime.now().minus(intervalInMins * 60 * 1000);
+        DateTime oneHourBeforeNow = DateTime.now().minusMinutes(intervalInMins);
         return athenaService.getLogEntrysAfter(oneHourBeforeNow).stream()
                 .map(ALBAccessLogEvent::new).collect(Collectors.toList());
     }
