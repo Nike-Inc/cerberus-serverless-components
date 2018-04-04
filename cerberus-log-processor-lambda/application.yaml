@@ -24,9 +24,12 @@ Parameters:
   RateLimitAutoBlacklistIpSetId:
     Type: String
     Description: The ID of the Cerberus manual auto-blacklist IP set.
-  RequestPerMinuteLimit:
+  RequestPerIntervalLimit:
     Type: Number
-    Description: The number of requests per minute allowed per IP address
+    Description: The number of requests per interval allowed per IP address
+  IntervalInMins:
+    Type: Number
+    Description: The interval in minutes of requests per interval allowed per IP address
   ViolationBlacklistDurationInMins:
     Type: Number
     Description: The number of minutes to blacklist an IP address for after it has violated the rate limit
@@ -36,6 +39,21 @@ Parameters:
   SlackWebHookUrl:
     Type: String
     Description: The Slack HTTP endpoint to which the Lambda will post rate limit notifications
+  AthenaDatabaseName:
+    Type: String
+    Description: The name of ALB log's Athena database
+  AthenaTableName:
+    Type: String
+    Description: The name of ALB log's Athena table
+  AthenaQueryResultBucketName:
+    Type: String
+    Description: The name of Athena query result's S3 bucket
+  AlbLogBucket:
+    Type: String
+    Description: The name of ALB log's S3 bucket
+  AlbLogBucketArn:
+    Type: String
+    Description: The ARN of ALB log's S3 bucket
 Resources:
   LambdaLogProcessorFunction:
     Type: AWS::Serverless::Function
@@ -43,11 +61,16 @@ Resources:
       Description: Function for auto black listing ips that are misbehaving
       CodeUri: @@CODE_URI@@
       Handler: >-
-         com.nike.cerberus.lambda.waf.handler.ALBAccessLogEventHandler::handleNewS3Event
+         com.nike.cerberus.lambda.waf.handler.ALBAccessLogEventHandler::handleScheduledEvent
       Runtime: java8
       MemorySize: 512
       Timeout: 60
       Role: !GetAtt LogProcessorLambdaRole.Arn
+      Events:
+        Timer:
+          Type: Schedule
+          Properties:
+            Schedule: rate(5 minutes)
       Environment:
         Variables:
           IAM_PRINCIPAL_ARN: !GetAtt LogProcessorLambdaRole.Arn
@@ -57,19 +80,17 @@ Resources:
           MANUAL_BLACKLIST_IP_SET_ID: !Ref ManualBlacklistIpSetId
           MANUAL_WHITELIST_IP_SET_ID: !Ref ManualWhitelistIpSetId
           RATE_LIMIT_AUTO_BLACKLIST_IP_SET_ID: !Ref RateLimitAutoBlacklistIpSetId
-          REQUEST_PER_MIN_LIMIT: !Ref RequestPerMinuteLimit
+          REQUEST_PER_INTERVAL_LIMIT: !Ref
+          RequestPerIntervalLimit
+          INTERVAL_IN_MINS: !Ref IntervalInMins
           VIOLATION_BLACKLIST_DURATION_IN_MINS: !Ref ViolationBlacklistDurationInMins
           SLACK_ICON: !Ref SlackIcon
           SLACK_WEB_HOOK_URL: !Ref SlackWebHookUrl
+          ATHENA_DATABASE_NAME: !Ref AthenaDatabaseName
+          ATHENA_TABLE_NAME: !Ref AthenaTableName
+          ATHENA_QUERY_RESULT_BUCKET_NAME: !Ref AthenaQueryResultBucketName
+          ALB_LOG_BUCKET: !Ref AlbLogBucket
 
-  LambdaInvokePermission:
-    Type: AWS::Lambda::Permission
-    DependsOn: LambdaLogProcessorFunction
-    Properties:
-      Action: lambda:*
-      FunctionName: !GetAtt 'LambdaLogProcessorFunction.Arn'
-      Principal: s3.amazonaws.com
-      SourceAccount: !Ref 'AWS::AccountId'
 
   LogProcessorLambdaRole:
     Type: AWS::IAM::Role
@@ -84,6 +105,8 @@ Resources:
                 - lambda.amazonaws.com
         Version: '2012-10-17'
       Path: /
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AmazonAthenaFullAccess"
       Policies:
         - PolicyDocument:
             Statement:
@@ -128,3 +151,12 @@ Resources:
                 Effect: Allow
                 Resource: '*'
           PolicyName: CloudWatchAccess
+        - PolicyDocument:
+            Statement:
+              - Action:
+                  - s3:*
+                Effect: Allow
+                Resource:
+                    - !Ref AlbLogBucketArn
+                    - 'arn:aws:s3:::*/*'
+          PolicyName: S3BucketAccess

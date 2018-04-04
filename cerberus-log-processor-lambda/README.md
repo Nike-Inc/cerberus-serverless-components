@@ -3,7 +3,7 @@
 This is a JVM based lambda for processing access log events. It is part of the [edge security](http://engineering.nike.com/cerberus/docs/architecture/infrastructure-overview)
 solution for [Cerberus](http://engineering.nike.com/cerberus/).
 
-ALBAccessLogEventHandler::handleNewS3Event(), gets triggered every time the ALB saves a log to S3.
+ALBAccessLogEventHandler::handleScheduledEvent(), gets triggered every 5 minutes.
 ALBAccessLogEventHandler has a list of processors that can ingest the events and do various things like rate limiting.
 
 To learn more about Cerberus, please see the [Cerberus website](http://engineering.nike.com/cerberus/).
@@ -11,11 +11,11 @@ To learn more about Cerberus, please see the [Cerberus website](http://engineeri
 ## Processors
 
 ### Rate Limiting Processor
-This processor will go through access log events and ensures that ips that show up more than the requests per minute limit are added to the auto block list for the Cerberus Env WAF
+This processor will query Athena and ensures that ips that show up more than the requests per interval limit are added to the auto block list for the Cerberus Env WAF
 
 ### Future Processors
 We would like to have a processor for auto blocking ips that spam bad requests.
 
 ## Building
 
-To build the fat jar required for Lambda run `./gradlew cerberus-log-processor-lambda:sJ cerberus-log-processor-lambda:deploySam -Penv=[ENVIRONMENT]`
+To build and deploy the fat jar required for Lambda run `./gradlew cerberus-log-processor-lambda:sJ cerberus-log-processor-lambda:deploySam -Penv=[ENVIRONMENT]`

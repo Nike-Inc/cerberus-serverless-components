@@ -343,10 +343,8 @@ public class RateLimitingProcessor implements Processor {
      * @param reqIdCountMap the running count map, keeps track of requests per minute
      */
     protected void processRequest(ALBAccessLogEvent event, Map<String, Integer> reqIdCountMap) {
-        String dateTimeStr = event.getDateTime().toString("yyyy-MM-dd--HH:mm");
-
-        // create a key out of the date plus the time to a minutes accuracy and the requester ip, and count the requests
-        String requestKey = String.format("%s--%s", dateTimeStr, event.getRequestingClientIp());
+        // create a key out of the requester ip, and count the requests
+        String requestKey = event.getRequestingClientIp();
         if (reqIdCountMap.containsKey(requestKey)) {
             reqIdCountMap.put(requestKey, reqIdCountMap.get(requestKey) + 1);
         } else {
@@ -355,7 +353,7 @@ public class RateLimitingProcessor implements Processor {
     }
 
     /**
-     * Process the map we created and ensure that keys in the map that have values greater than the rate limit per minute
+     * Process the map we created and ensure that keys in the map that have values greater than the rate limit per interval
      * get processed and dealt with.
      *
      * @param reqIdCountMap The map of request ids to request count, this assumes the requests are grouped by IPs combined with time to a minutes accuracy
@@ -366,10 +364,11 @@ public class RateLimitingProcessor implements Processor {
         Date now = new Date();
         Map<String, ViolationMetaData> violators = Maps.newHashMap();
 
+        // instead of using minute of hour as part of the key, assume that only the logs within the last interval is provided
         reqIdCountMap.entrySet().stream()
-                .filter(entry -> entry.getValue() > params.getRequestPerMinuteLimit())
+                .filter(entry -> entry.getValue() > params.getRequestPerIntervalLimit())
                 .forEach(entry -> {
-                    String ip = entry.getKey().split("--")[2];
+                    String ip = entry.getKey();
                     if (violators.containsKey(ip)) {
                         ViolationMetaData metaData = violators.get(ip);
                         if (metaData.getMaxRate() < entry.getValue()) {

@@ -1,15 +1,11 @@
 package com.nike.cerberus.lambda.waf.handler;
 
-import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.events.S3Event;
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.event.S3EventNotification;
-import com.amazonaws.services.s3.model.GetObjectRequest;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.services.waf.AWSWAFRegional;
 import com.google.common.collect.Lists;
 import com.nike.cerberus.lambda.waf.ALBAccessLogEvent;
+import com.nike.cerberus.lambda.waf.AthenaService;
 import com.nike.cerberus.lambda.waf.LogProcessorLambdaConfig;
 import com.nike.cerberus.lambda.waf.processor.Processor;
 import org.junit.Before;
@@ -17,19 +13,12 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.isA;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 public class ALBAccessLogEventHandlerTest {
@@ -45,9 +34,21 @@ public class ALBAccessLogEventHandlerTest {
     @Mock
     LogProcessorLambdaConfig logProcessorLambdaConfig;
 
+    @Mock
+    AthenaService athenaService;
+
+    List<List<String>> events = Arrays.asList(
+            Arrays.asList("h2", "2017-10-02T17:48:55.882507Z", "app/foo/balancer", "1.1.1.1", "45745", "2.2.0.8", "8443", "-1", "-1", "-1", "504", "-", "265", "620", "GET", "https://cerberus.oss.nike.com:443/dashboard/", "HTTP/2.0", "\"User Agent stuff\"", "ECDHE-RSA-AES128-GCM-SHA256", "TLSv1.2", "arn:aws:elasticloadbalancing:us-west-2:00000:targetgroup/target-group-name/99cbf5b80ac385c5", "\"Root=1-59d27be8-3ef5870d62321261398f1a8c\" \"perf1.cerberus.nikecloud.com\"", "arn:aws:iam::933764306573:server-certificate/cloudfront/cerberus/perf1/cms_1ffde2bc-e8c9-4521-b2b0-4d4e5fd00fc6", "0", "2017-10-02"),
+            Arrays.asList("h2", "2017-10-02T17:48:55.882507Z", "app/foo/balancer", "1.1.1.1", "45745", "2.2.0.8", "8443", "-1", "-1", "-1", "504", "-", "265", "620", "GET", "https://cerberus.oss.nike.com:443/dashboard/", "HTTP/2.0", "\"User Agent stuff\"", "ECDHE-RSA-AES128-GCM-SHA256", "TLSv1.2", "arn:aws:elasticloadbalancing:us-west-2:00000:targetgroup/target-group-name/99cbf5b80ac385c5", "\"Root=1-59d27be8-20bb91ec34929945336cb601\" \"perf1.cerberus.nikecloud.com\"", "arn:aws:iam::933764306573:server-certificate/cloudfront/cerberus/perf1/cms_1ffde2bc-e8c9-4521-b2b0-4d4e5fd00fc6", "0", "2017-10-02"),
+            Arrays.asList("h2", "2017-10-02T17:48:55.882507Z", "app/foo/balancer", "1.1.1.1", "45745", "2.2.0.8", "8443", "-1", "-1", "-1", "504", "-", "265", "620", "GET", "https://cerberus.oss.nike.com:443/dashboard/", "HTTP/2.0", "\"User Agent stuff\"", "ECDHE-RSA-AES128-GCM-SHA256", "TLSv1.2", "arn:aws:elasticloadbalancing:us-west-2:00000:targetgroup/target-group-name/99cbf5b80ac385c5", "\"Root=1-59d27be8-5f4ea6646ffc7f454c328fe2\" \"perf1.cerberus.nikecloud.com\"", "arn:aws:iam::933764306573:server-certificate/cloudfront/cerberus/perf1/cms_1ffde2bc-e8c9-4521-b2b0-4d4e5fd00fc6", "0", "2017-10-02"),
+            Arrays.asList("h2", "2017-10-02T17:48:55.882507Z", "app/foo/balancer", "1.1.1.1", "45745", "2.2.0.8", "8443", "-1", "-1", "-1", "504", "-", "265", "620", "GET", "https://cerberus.oss.nike.com:443/dashboard/", "HTTP/2.0", "\"User Agent stuff\"", "ECDHE-RSA-AES128-GCM-SHA256", "TLSv1.2", "arn:aws:elasticloadbalancing:us-west-2:00000:targetgroup/target-group-name/99cbf5b80ac385c5", "\"Root=1-59d27bfd-54d147ba357f3bd267d9d6e5\" \"perf1.cerberus.nikecloud.com\"", "session-renegotiated-or-reused\"", "0", "2017-10-02"));
+
     @Before
     public void before() throws IOException {
         initMocks(this);
+        doReturn("arn:aws:iam::123123123:role/foo").when(logProcessorLambdaConfig).getIamPrincipalArn();
+        doReturn(Regions.US_WEST_2).when(logProcessorLambdaConfig).getRegion();
+        doReturn("bucketname").when(logProcessorLambdaConfig).getAlbLogBucketName();
         handler = spy(new ALBAccessLogEventHandler(amazonS3Client, awsWaf, logProcessorLambdaConfig));
     }
 
@@ -76,11 +77,10 @@ public class ALBAccessLogEventHandlerTest {
 
     @Test
     public void testThatIngestLogStreamReturnsAValidListOfEvents() throws IOException {
-        InputStream logStream = getClass().getClassLoader().getResourceAsStream("access.log.gz");
 
-        S3ObjectInputStream s3ObjectInputStream = new S3ObjectInputStream(logStream, null);
-
-        List<ALBAccessLogEvent> events = handler.ingestLogStream(s3ObjectInputStream);
+        handler.setAthenaService(athenaService);
+        doReturn(events).when(athenaService).getLogEntrysAfter(any());
+        List<ALBAccessLogEvent> events = handler.getLogEvents();
 
         assertEquals(4, events.size());
     }
@@ -88,7 +88,6 @@ public class ALBAccessLogEventHandlerTest {
     @Test
     public void testThatHandleEventCallsProcessEventsOnTheProcessors() throws IOException {
         String bucketName = "bucketname";
-        String arn = "foo";
 
         Processor processor = mock(Processor.class);
         List<Processor> processors = Lists.newLinkedList();
@@ -96,70 +95,17 @@ public class ALBAccessLogEventHandlerTest {
 
         handler.overrideProcessors(processors);
 
-        Context context = mock(Context.class);
-        when(context.getInvokedFunctionArn()).thenReturn(arn);
+        doReturn(null).when(handler).getLogEvents();
 
-        S3Event event = mock(S3Event.class);
-        List<S3EventNotification.S3EventNotificationRecord> records = Lists.newArrayList();
-        S3EventNotification.S3EventNotificationRecord record = mock(S3EventNotification.S3EventNotificationRecord.class);
-        records.add(record);
-        when(event.getRecords()).thenReturn(records);
-        S3EventNotification.S3Entity s3Entity = mock(S3EventNotification.S3Entity.class);
-        S3EventNotification.S3BucketEntity bucketEntity = mock(S3EventNotification.S3BucketEntity.class);
-        S3EventNotification.S3ObjectEntity objectEntity = mock(S3EventNotification.S3ObjectEntity.class);
-        when(s3Entity.getBucket()).thenReturn(bucketEntity);
-        when(s3Entity.getObject()).thenReturn(objectEntity);
-        when(record.getS3()).thenReturn(s3Entity);
-        when(bucketEntity.getName()).thenReturn(bucketName);
-        when(objectEntity.getKey()).thenReturn("access.log.gz");
-        when(amazonS3Client.getObject(isA(GetObjectRequest.class))).thenReturn(mock(S3Object.class));
-        doReturn(null).when(handler).ingestLogStream(null);
-
-        handler.handleNewS3Event(event);
+        handler.handleScheduledEvent();
 
         verify(processor, times(1)).processLogEvents(null, logProcessorLambdaConfig, bucketName);
     }
 
-    @Test
-    public void testThatHandleEventCallsDoesNotProcessEventsOnTheProcessorsWhenNotALogFile() throws IOException {
-        String bucketName = "bucketname";
-        String arn = "foo";
-
-        Processor processor = mock(Processor.class);
-        List<Processor> processors = Lists.newLinkedList();
-        processors.add(processor);
-
-        handler.overrideProcessors(processors);
-        LogProcessorLambdaConfig params = mock(LogProcessorLambdaConfig.class);
-
-        Context context = mock(Context.class);
-        when(context.getInvokedFunctionArn()).thenReturn(arn);
-
-        S3Event event = mock(S3Event.class);
-        List<S3EventNotification.S3EventNotificationRecord> records = Lists.newArrayList();
-        S3EventNotification.S3EventNotificationRecord record = mock(S3EventNotification.S3EventNotificationRecord.class);
-        records.add(record);
-        when(event.getRecords()).thenReturn(records);
-        S3EventNotification.S3Entity s3Entity = mock(S3EventNotification.S3Entity.class);
-        S3EventNotification.S3BucketEntity bucketEntity = mock(S3EventNotification.S3BucketEntity.class);
-        S3EventNotification.S3ObjectEntity objectEntity = mock(S3EventNotification.S3ObjectEntity.class);
-        when(s3Entity.getBucket()).thenReturn(bucketEntity);
-        when(s3Entity.getObject()).thenReturn(objectEntity);
-        when(record.getS3()).thenReturn(s3Entity);
-        when(bucketEntity.getName()).thenReturn(bucketName);
-        when(objectEntity.getKey()).thenReturn("data.json");
-        when(amazonS3Client.getObject(isA(GetObjectRequest.class))).thenReturn(mock(S3Object.class));
-        doReturn(null).when(handler).ingestLogStream(null);
-
-        handler.handleNewS3Event(event);
-
-        verify(processor, times(0)).processLogEvents(null, params, bucketName);
-    }
 
     @Test
     public void testThatHandleEventDoesNotExplodeWhenTheFirstProcessorErrorsOut() throws IOException {
         String bucketName = "bucketname";
-        String arn = "foo";
 
         Processor processor = mock(Processor.class);
         Processor processor2 = mock(Processor.class);
@@ -169,28 +115,9 @@ public class ALBAccessLogEventHandlerTest {
         processors.add(processor2);
 
         handler.overrideProcessors(processors);
-        LogProcessorLambdaConfig params = mock(LogProcessorLambdaConfig.class);
+        doReturn(null).when(handler).getLogEvents();
 
-        Context context = mock(Context.class);
-        when(context.getInvokedFunctionArn()).thenReturn(arn);
-
-        S3Event event = mock(S3Event.class);
-        List<S3EventNotification.S3EventNotificationRecord> records = Lists.newArrayList();
-        S3EventNotification.S3EventNotificationRecord record = mock(S3EventNotification.S3EventNotificationRecord.class);
-        records.add(record);
-        when(event.getRecords()).thenReturn(records);
-        S3EventNotification.S3Entity s3Entity = mock(S3EventNotification.S3Entity.class);
-        S3EventNotification.S3BucketEntity bucketEntity = mock(S3EventNotification.S3BucketEntity.class);
-        S3EventNotification.S3ObjectEntity objectEntity = mock(S3EventNotification.S3ObjectEntity.class);
-        when(s3Entity.getBucket()).thenReturn(bucketEntity);
-        when(s3Entity.getObject()).thenReturn(objectEntity);
-        when(record.getS3()).thenReturn(s3Entity);
-        when(bucketEntity.getName()).thenReturn(bucketName);
-        when(objectEntity.getKey()).thenReturn("access.log.gz");
-        when(amazonS3Client.getObject(isA(GetObjectRequest.class))).thenReturn(mock(S3Object.class));
-        doReturn(null).when(handler).ingestLogStream(null);
-
-        handler.handleNewS3Event(event);
+        handler.handleScheduledEvent();
 
         verify(processor, times(1)).processLogEvents(null, logProcessorLambdaConfig, bucketName);
         verify(processor2, times(1)).processLogEvents(null, logProcessorLambdaConfig, bucketName);
