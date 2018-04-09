@@ -80,8 +80,7 @@ Resources:
           MANUAL_BLACKLIST_IP_SET_ID: !Ref ManualBlacklistIpSetId
           MANUAL_WHITELIST_IP_SET_ID: !Ref ManualWhitelistIpSetId
           RATE_LIMIT_AUTO_BLACKLIST_IP_SET_ID: !Ref RateLimitAutoBlacklistIpSetId
-          REQUEST_PER_INTERVAL_LIMIT: !Ref
-          RequestPerIntervalLimit
+          REQUEST_PER_INTERVAL_LIMIT: !Ref RequestPerIntervalLimit
           INTERVAL_IN_MINS: !Ref IntervalInMins
           VIOLATION_BLACKLIST_DURATION_IN_MINS: !Ref ViolationBlacklistDurationInMins
           SLACK_ICON: !Ref SlackIcon
