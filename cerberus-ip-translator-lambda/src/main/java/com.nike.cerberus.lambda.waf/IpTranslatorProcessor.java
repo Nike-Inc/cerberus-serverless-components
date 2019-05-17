@@ -25,6 +25,7 @@ import org.apache.log4j.Logger;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class IpTranslatorProcessor {
 
@@ -92,7 +93,7 @@ public class IpTranslatorProcessor {
             });
         });
 
-        return parsedIps;
+        return parsedIps.stream().filter(StringUtils::isNotBlank).collect(Collectors.toList());
     }
 
     private List<Map<String,String>> parseAndTranslateIpAddressToMetadata(String ipAddress, String environment) {
