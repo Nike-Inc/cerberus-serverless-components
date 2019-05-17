@@ -68,6 +68,10 @@ Resources:
                 Action:
                   - SNS:Publish
                 Resource: !ImportValue CerberusMetricsTopicARN
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonAthenaFullAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+
 
 Outputs:
   CerberusAdminIamRoleARN:
