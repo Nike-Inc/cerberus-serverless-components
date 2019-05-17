@@ -49,7 +49,7 @@ public class SlackMessageSender {
             sendSlackMessage(String.format("*No recent actions found for IP in %s: %s*", environment, ip));
         }
         else {
-            sendSlackMessage(String.format("*Top unique actions in the last 2 hours for IP: %s *", ip));
+            sendSlackMessage(String.format("*Top unique actions in the last 2 hours for IP in %s: %s *", environment, ip));
             ipMetadataTable.forEach(row -> {
                 SlackMessageText messageText = new SlackMessageText();
                 messageText.setIpAddress(ip);
