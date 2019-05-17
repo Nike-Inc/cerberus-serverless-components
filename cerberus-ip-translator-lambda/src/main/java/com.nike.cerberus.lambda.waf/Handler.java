@@ -60,13 +60,13 @@ public class Handler {
             return new ApiGatewayProxyResponse()
                 .setStatusCode(500)
                 .setBody(gson.toJson(ImmutableMap.of(
-                    "msg", e.getMessage()
+                    "message", e.getMessage()
                 )));
         }
 
         return new ApiGatewayProxyResponse()
             .setBody(gson.toJson(ImmutableMap.of(
-                "msg", slackMessage.getText()
+                "message", slackMessage.getText()
             )))
             .setStatusCode(200);
     }

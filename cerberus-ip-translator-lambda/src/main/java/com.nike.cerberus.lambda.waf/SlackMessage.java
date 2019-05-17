@@ -16,6 +16,9 @@
 
 package com.nike.cerberus.lambda.waf;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+
 public class SlackMessage {
 
     private String token;
@@ -102,7 +105,11 @@ public class SlackMessage {
     }
 
     public String getText() {
-        return text;
+        try {
+            return URLDecoder.decode(text, "utf-8");
+        } catch (UnsupportedEncodingException e) {
+            return text;
+        }
     }
 
     public SlackMessage setText(String text) {

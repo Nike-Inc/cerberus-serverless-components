@@ -18,7 +18,6 @@ package com.nike.cerberus.lambda.waf;
 
 import com.amazonaws.services.athena.model.Datum;
 import com.amazonaws.services.athena.model.ResultSet;
-import com.fieldju.commons.EnvUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import org.apache.log4j.Logger;
@@ -35,26 +34,33 @@ public class IpTranslatorProcessor {
     private SlackMessageSender slackMessageSender = new SlackMessageSender();
 
     public void processMessageIfFromRateLimiter(SlackMessage message) {
-        if (! message.getText().startsWith("ALB Log Event Handler - Rate Limiting Processor run summary")) {
+        log.info("processMessageIfFromRateLimiter called with the following message: " + message.getText());
+
+        if (! isMessageFromRateLimiter(message)) {
             log.info("Slack message was not from rate limiter message, aborting...");
             return;
         }
 
-        Pattern envName = Pattern.compile(".*Environment: (?<env>.*?)\n");
-        Matcher envMatcher = envName.matcher(message.getText());
-        if (! envMatcher.find()) {
-            log.info("Failed to determine environment from slack message, aborting...");
-            return;
-        }
-
-        String environment = envMatcher.group("env");
+        String environment = getEnvironmentFromSlackMessage(message);
 
         translateIpToMetadata(message, environment);
     }
 
-    private void translateIpToMetadata(SlackMessage message, String environment) {
+    protected boolean isMessageFromRateLimiter(SlackMessage message) {
+        return message.getText().startsWith("ALB Log Event Handler - Rate Limiting Processor run summary");
+    }
 
-        log.info("translateIpToMetadata called with the following message: " + message.getText());
+    protected String getEnvironmentFromSlackMessage(SlackMessage message) {
+        Pattern envName = Pattern.compile(".*Environment: (?<env>.*?)\\n");
+        Matcher envMatcher = envName.matcher(message.getText());
+        if (! envMatcher.find()) {
+            log.info("Failed to determine environment from slack message, aborting...");
+            throw new RuntimeException("Failed to determine environment!");
+        }
+        return envMatcher.group("env");
+    }
+
+    private void translateIpToMetadata(SlackMessage message, String environment) {
 
         List<String> parsedIps = getIpsFromSlackMessage(message);
 
@@ -71,7 +77,7 @@ public class IpTranslatorProcessor {
         });
     }
 
-    private List<String> getIpsFromSlackMessage(SlackMessage message) {
+    protected List<String> getIpsFromSlackMessage(SlackMessage message) {
         String text = message.getText();
         List<String> parsedIps = new LinkedList<>();
 
