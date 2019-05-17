@@ -30,7 +30,7 @@ import java.util.Map;
 public class SlackMessageSender {
 
     private static final String SLACK_INCOMING_WEB_HOOK_URL = System.getenv("SLACK_INCOMING_WEB_HOOK_URL");
-    private static final String SLACK_BOT_NAME =  System.getenv("SLACK_BOT_NAME");
+    private static final String SLACK_BOT_NAME =  "IP-Translator";
     private static final String SLACK_BOT_ICON_URL =  System.getenv("SLACK_BOT_ICON_URL");
 
     private final SlackClient slack;
