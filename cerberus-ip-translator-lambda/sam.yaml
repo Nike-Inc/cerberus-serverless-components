@@ -1,0 +1,54 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: Cerberus Ip Translator Lambda
+Parameters:
+  CerberusUrl:
+    Type: String
+    Description: The Cerberus API to test.
+  SlackIcon:
+    Type: String
+    Description: URL of an icon image file to be used in Slack
+  SlackToken:
+    Type: String
+    Description: The Slack Icoming Webhook token
+  SlackWebHookUrl:
+    Type: String
+    Description: The Slack HTTP endpoint to which the Lambda will post rate limit notifications
+  CerberusAdminIamRoleArn:
+    Type: String
+    Description: The Cerberus Admin Role Arn to use.
+Resources:
+  CerberusIpTranslatorLambdaIncomingWebhookFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: >-
+        com.nike.cerberus.lambda.waf.Handler::handleSlackOutgoingWebHookEvent
+      Runtime: java8
+      Description: Function for ingesting rate limit Slack messages and doing search look up and response.
+      MemorySize: 512
+      Timeout: 300
+      CodeUri: @@CODE_URI@@
+      Role: !Ref CerberusAdminIamRoleArn
+      Environment:
+        Variables:
+          SLACK_INCOMING_WEB_HOOK_URL: !Ref SlackWebHookUrl
+          SLACK_TOKEN: !Ref SlackToken
+          SLACK_BOT_ICON_URL: !Ref SlackIcon
+          REGION: !Ref AWS::Region
+          CERBERUS_URL: !Ref CerberusUrl
+      Events:
+        PostResource:
+          Type: Api
+          Properties:
+            Path: /outgoing-webhook/
+            Method: post
+Outputs:
+  WebhookEndpoint:
+    Description: The health check endpoint
+    Value: !Join
+      - ''
+      - - https://
+        - !Ref ServerlessRestApi
+        - '.execute-api.'
+        - !Ref 'AWS::Region'
+        - '.amazonaws.com/Prod/outgoing-webhook'

@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2019 Nike Inc.
+ * Copyright 2019 Nike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,6 +16,7 @@
 
 package com.nike.cerberus.lambda.waf;
 
+import com.fieldju.commons.StringUtils;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -44,6 +45,11 @@ public class Handler {
 
     public void handleSlackOutgoingWebHookEvent(Map<String, Object> data) {
         SlackMessage slackMessage = getMessageFromData(data);
+
+        if (StringUtils.isNotBlank(apiToken) && ! StringUtils.equals(apiToken, slackMessage.getToken())) {
+            throw new RuntimeException("Error the provided token did not match the expected token");
+        }
+
         ipTranslatorProcessor.translateIpToMetadata(slackMessage);
     }
 

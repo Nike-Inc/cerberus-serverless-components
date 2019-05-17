@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2019 Nike Inc.
+ * Copyright 2019 Nike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,8 +21,7 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.athena.AmazonAthena;
 import com.amazonaws.services.athena.AmazonAthenaClient;
 import com.amazonaws.services.athena.model.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.log4j.Logger;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -31,7 +30,7 @@ import static java.time.temporal.ChronoUnit.HOURS;
 
 public class AthenaQuery {
 
-    private final Logger logger = Logger.getLogger(AthenaQuery.class.getName());
+    private final Logger logger = Logger.getLogger(getClass());
 
     /**
      * Creates Athena query to look up IP address and sends to Athena
@@ -40,7 +39,7 @@ public class AthenaQuery {
 
         OffsetDateTime now = Instant.now().atOffset(ZoneOffset.UTC);
         OffsetDateTime back = now.minus(2, HOURS);
-        logger.log(Level.INFO, "IP" + ip);
+        logger.info("IP: " + ip);
         try {
             return executeAthenaQuery(
                 "SELECT principal_name, action, sdb_name_slug, client_version, count(path) AS count " +
@@ -60,7 +59,7 @@ public class AthenaQuery {
      */
     private GetQueryResultsResult executeAthenaQuery(String query) throws InterruptedException {
 
-        logger.log(Level.INFO,"LOG:" + query);
+        logger.info("LOG: " + query);
 
         AmazonAthena athena = AmazonAthenaClient.builder()
             .withRegion(Regions.US_WEST_2)
@@ -79,13 +78,13 @@ public class AthenaQuery {
         do {
             state = athena.getQueryExecution(new GetQueryExecutionRequest().withQueryExecutionId(id)).getQueryExecution().getStatus().getState();
             String info = athena.getQueryExecution(new GetQueryExecutionRequest().withQueryExecutionId(id)).getQueryExecution().getStatus().getStateChangeReason();
-            logger.log(Level.INFO,String.format("polling for query to finish: current status: %s", state));
-            logger.log(Level.INFO,"info: " + info);
+            logger.info(String.format("Polling for query to finish: current status: %s", state));
+            logger.info("info: " + info);
             Thread.sleep(1000);
         } while (state.equals("RUNNING"));
 
 
-        logger.log(Level.INFO,String.format("The query: %s is in state: %s, fetching results", id, state));
+        logger.info(String.format("The query: %s is in state: %s, fetching results", id, state));
 
         return athena.getQueryResults(new GetQueryResultsRequest().withQueryExecutionId(id));
     }

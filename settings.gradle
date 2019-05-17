@@ -5,6 +5,7 @@ include 'cerberus-log-processor-lambda',
         'cerberus-metrics-topic',
         'cerberus-health-check-lambda',
         'cerberus-admin-iam-role',
-        'cerberus-clean-up-lambda'
+        'cerberus-clean-up-lambda',
+        'cerberus-ip-translator-lambda'
 
 
