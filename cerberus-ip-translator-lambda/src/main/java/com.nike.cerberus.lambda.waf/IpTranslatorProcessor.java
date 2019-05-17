@@ -74,7 +74,7 @@ public class IpTranslatorProcessor {
 
         parsedIps.forEach(ip -> {
             List<Map<String,String>> ipMetadataTable = parseAndTranslateIpAddressToMetadata(ip, environment);
-            slackMessageSender.createAndSendSlackMessage(ip, ipMetadataTable);
+            slackMessageSender.createAndSendSlackMessage(ip, ipMetadataTable, environment);
         });
     }
 

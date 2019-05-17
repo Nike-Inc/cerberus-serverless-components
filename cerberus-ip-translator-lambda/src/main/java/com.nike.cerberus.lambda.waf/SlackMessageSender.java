@@ -43,10 +43,10 @@ public class SlackMessageSender {
         slackMessageTextBuilder = new SlackMessageTextBuilder();
     }
 
-    public void createAndSendSlackMessage(String ip, List<Map<String,String>> ipMetadataTable) {
+    public void createAndSendSlackMessage(String ip, List<Map<String,String>> ipMetadataTable, String environment) {
 
         if (ipMetadataTable.isEmpty()) {
-            sendSlackMessage(String.format("*No recent actions found for IP: %s*", ip));
+            sendSlackMessage(String.format("*No recent actions found for IP in %s: %s*", environment, ip));
         }
         else {
             sendSlackMessage(String.format("*Top unique actions in the last 2 hours for IP: %s *", ip));
