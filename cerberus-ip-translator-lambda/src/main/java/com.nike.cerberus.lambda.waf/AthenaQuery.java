@@ -59,7 +59,7 @@ public class AthenaQuery {
      */
     private GetQueryResultsResult executeAthenaQuery(String query) throws InterruptedException {
 
-        logger.info("LOG: " + query);
+        logger.info("QUERY: " + query);
 
         AmazonAthena athena = AmazonAthenaClient.builder()
             .withRegion(Regions.US_WEST_2)
@@ -77,12 +77,9 @@ public class AthenaQuery {
         String state;
         do {
             state = athena.getQueryExecution(new GetQueryExecutionRequest().withQueryExecutionId(id)).getQueryExecution().getStatus().getState();
-            String info = athena.getQueryExecution(new GetQueryExecutionRequest().withQueryExecutionId(id)).getQueryExecution().getStatus().getStateChangeReason();
             logger.info(String.format("Polling for query to finish: current status: %s", state));
-            logger.info("info: " + info);
             Thread.sleep(1000);
         } while (state.equals("RUNNING"));
-
 
         logger.info(String.format("The query: %s is in state: %s, fetching results", id, state));
 

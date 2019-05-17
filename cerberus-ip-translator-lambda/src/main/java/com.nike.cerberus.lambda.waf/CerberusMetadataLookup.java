@@ -60,8 +60,9 @@ public class CerberusMetadataLookup {
     /**
      * Obtains Cerberus Metadata which is a list of SDB summaries
      */
-    public ArrayList<Map<String, String>> getCerberusMetadata(String cerberusUrl) {
+    public ArrayList<Map<String, String>> getCerberusMetadata(String environment) {
 
+        String cerberusUrl = String.format("https://%s.cerberus.nikecloud.com", environment);
         OkHttpClient httpClient = createHttpClient();
         HashMap result;
         String region = EnvUtils.getRequiredEnv("REGION");

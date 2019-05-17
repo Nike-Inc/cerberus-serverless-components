@@ -27,7 +27,7 @@ public class Main {
         Map<String, Object> data = ImmutableMap.of(
                 "body",
 
-                "token=2W0QtfsNEqaBLpXWI3K9SWl9&" +
+                "token=23DEpXRZsPczPOpXqCrm0YAC" +
                         "team_id=T3JSFAGH5&" +
                         "team_domain=awesom-o&" +
                         "service_id=119598257489&" +

@@ -77,8 +77,7 @@ public class SlackMessageSender {
         try {
             WebhookResponse response = slack.send(SLACK_INCOMING_WEB_HOOK_URL, payload);
         } catch (IOException e) {
-            e.printStackTrace();
-//            TODO change to throw exception
+            throw new RuntimeException("I/O error while communicating with Slack", e);
         }
     }
 
@@ -97,8 +96,7 @@ public class SlackMessageSender {
         try {
             WebhookResponse response = slack.send(SLACK_INCOMING_WEB_HOOK_URL, payload);
         } catch (IOException e) {
-            e.printStackTrace();
-//            TODO change to throw exception
+            throw new RuntimeException("I/O error while communicating with Slack", e);
         }
     }
 }

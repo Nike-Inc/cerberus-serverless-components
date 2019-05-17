@@ -2,9 +2,6 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
 Description: Cerberus Ip Translator Lambda
 Parameters:
-  CerberusUrl:
-    Type: String
-    Description: The Cerberus API to test.
   SlackIcon:
     Type: String
     Description: URL of an icon image file to be used in Slack
@@ -35,7 +32,6 @@ Resources:
           SLACK_TOKEN: !Ref SlackToken
           SLACK_BOT_ICON_URL: !Ref SlackIcon
           REGION: !Ref AWS::Region
-          CERBERUS_URL: !Ref CerberusUrl
       Events:
         PostResource:
           Type: Api

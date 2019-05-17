@@ -49,7 +49,6 @@ dependencies {
     '@@CODE_URI@@': "${project.buildDir}${File.separator}libs${File.separator}${project.getName()}-${version}.jar"
   ]
   parameterOverrides = [
-    CerberusUrl: getProfileProperty('cerberus.url'),
     SlackWebHookUrl: getProfileProperty('slack.outgoing_web_hook.url'),
     SlackIcon: getProfileProperty('slack.outgoing_web_hook.icon'),
     SlackToken: getProfileProperty('slack.incoming_web_hook.token'),

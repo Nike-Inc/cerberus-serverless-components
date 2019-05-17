@@ -33,7 +33,6 @@ public class IpTranslatorProcessor {
 
     private CerberusMetadataLookup cerberusMetadataLookup = new CerberusMetadataLookup();
     private SlackMessageSender slackMessageSender = new SlackMessageSender();
-    private static String cerberusUrl = EnvUtils.getRequiredEnv("CERBERUS_URL");
 
     public void processMessageIfFromRateLimiter(SlackMessage message) {
         if (! message.getText().startsWith("ALB Log Event Handler - Rate Limiting Processor run summary")) {
@@ -111,7 +110,7 @@ public class IpTranslatorProcessor {
             ipMetadataTable.add(temp);
         });
 
-        ArrayList<Map<String, String>> sdbMetadata = cerberusMetadataLookup.getCerberusMetadata(cerberusUrl);
+        ArrayList<Map<String, String>> sdbMetadata = cerberusMetadataLookup.getCerberusMetadata(environment);
         for (Map<String, String> row : ipMetadataTable) {
             ArrayList<String> owner = cerberusMetadataLookup.searchCerberusMetadata(sdbMetadata, row.get("sdbName"), row.get("principalName"));
             row.put("owner", String.join("\n", owner));
