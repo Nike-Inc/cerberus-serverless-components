@@ -21,22 +21,50 @@ import com.amazonaws.services.athena.model.ResultSet;
 import com.fieldju.commons.EnvUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import org.apache.log4j.Logger;
+
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class IpTranslatorProcessor {
 
+    Logger log = Logger.getLogger(getClass());
+
     private CerberusMetadataLookup cerberusMetadataLookup = new CerberusMetadataLookup();
     private SlackMessageSender slackMessageSender = new SlackMessageSender();
     private static String cerberusUrl = EnvUtils.getRequiredEnv("CERBERUS_URL");
-    private static String environment;
 
-    public void translateIpToMetadata(SlackMessage message) {
+    public void processMessageIfFromRateLimiter(SlackMessage message) {
+        if (! message.getText().startsWith("ALB Log Event Handler - Rate Limiting Processor run summary")) {
+            log.info("Slack message was not from rate limiter message, aborting...");
+            return;
+        }
 
-        List<String> parsedIps = processSlackMessage(message);
+        Pattern envName = Pattern.compile(".*Environment: (?<env>.*?)\n");
+        Matcher envMatcher = envName.matcher(message.getText());
+        if (! envMatcher.find()) {
+            log.info("Failed to determine environment from slack message, aborting...");
+            return;
+        }
 
-        if (parsedIps.isEmpty()) return;
+        String environment = envMatcher.group("env");
+
+        translateIpToMetadata(message, environment);
+    }
+
+    private void translateIpToMetadata(SlackMessage message, String environment) {
+
+        log.info("translateIpToMetadata called with the following message: " + message.getText());
+
+        List<String> parsedIps = getIpsFromSlackMessage(message);
+
+        log.info("Parsed the following ips: " + String.join(", ", parsedIps));
+
+        if (parsedIps.isEmpty()) {
+            log.info("There were no ips parsed, aborting...");
+            return;
+        }
 
         parsedIps.forEach(ip -> {
             List<Map<String,String>> ipMetadataTable = parseAndTranslateIpAddressToMetadata(ip, environment);
@@ -44,23 +72,9 @@ public class IpTranslatorProcessor {
         });
     }
 
-    private List<String> processSlackMessage(SlackMessage message) {
+    private List<String> getIpsFromSlackMessage(SlackMessage message) {
         String text = message.getText();
         List<String> parsedIps = new LinkedList<>();
-
-        Pattern rateLimitProcessor = Pattern.compile(".*Rate Limiting Processor run summary\n");
-
-        if (! rateLimitProcessor.matcher(text).find()) {
-            return parsedIps;
-        }
-
-        Pattern envName = Pattern.compile(".*Environment: (?<env>.*?)\n");
-        Matcher envMatcher = envName.matcher(text);
-        if (! envMatcher.find()) {
-            return parsedIps;
-        }
-
-        environment = envMatcher.group("env");
 
         Arrays.stream(text.split("\\n"))
                 .filter(i -> i.startsWith("IP addresses added to auto block list:"))

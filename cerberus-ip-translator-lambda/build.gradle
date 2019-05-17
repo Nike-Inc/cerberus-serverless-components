@@ -1,5 +1,3 @@
-import com.fieldju.gradle.plugins.lambdasam.tasks.MultiRegionPackageAndDeploySamTask
-
 version '1.0.0'
 
 shadowJar {

@@ -17,6 +17,7 @@
 package com.nike.cerberus.lambda.waf;
 
 import com.fieldju.commons.StringUtils;
+import com.google.common.collect.ImmutableMap;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -43,14 +44,31 @@ public class Handler {
         ipTranslatorProcessor = new IpTranslatorProcessor();
     }
 
-    public void handleSlackOutgoingWebHookEvent(Map<String, Object> data) {
-        SlackMessage slackMessage = getMessageFromData(data);
+    public ApiGatewayProxyResponse handleSlackOutgoingWebHookEvent(Map<String, Object> data) {
+        SlackMessage slackMessage;
+        try {
+            log.info("Processing message: " + gson.toJson(data));
 
-        if (StringUtils.isNotBlank(apiToken) && ! StringUtils.equals(apiToken, slackMessage.getToken())) {
-            throw new RuntimeException("Error the provided token did not match the expected token");
+            slackMessage = getMessageFromData(data);
+
+            if (StringUtils.isNotBlank(apiToken) && ! StringUtils.equals(apiToken, slackMessage.getToken())) {
+                throw new RuntimeException("Error the provided token did not match the expected token");
+            }
+
+            ipTranslatorProcessor.processMessageIfFromRateLimiter(slackMessage);
+        } catch (Exception e) {
+            return new ApiGatewayProxyResponse()
+                .setStatusCode(500)
+                .setBody(gson.toJson(ImmutableMap.of(
+                    "msg", e.getMessage()
+                )));
         }
 
-        ipTranslatorProcessor.translateIpToMetadata(slackMessage);
+        return new ApiGatewayProxyResponse()
+            .setBody(gson.toJson(ImmutableMap.of(
+                "msg", slackMessage.getText()
+            )))
+            .setStatusCode(200);
     }
 
     private SlackMessage getMessageFromData(Map<String, Object> data) {
