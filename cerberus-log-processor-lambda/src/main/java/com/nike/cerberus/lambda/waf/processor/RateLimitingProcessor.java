@@ -107,7 +107,7 @@ public class RateLimitingProcessor implements Processor {
 
     }
 
-    private void logSummary(Map<String, List<String>> summary, LogProcessorLambdaConfig config) {
+    protected void logSummary(Map<String, List<String>> summary, LogProcessorLambdaConfig config) {
         List<String> ipsRemoved = summary.get("removed");
         List<String> ipsAdded = summary.get("added");
         List<String> ipsAlreadyBlocked = summary.get("duplicate");
