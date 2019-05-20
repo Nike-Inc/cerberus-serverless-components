@@ -1,0 +1,29 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: Cerberus Ip Translator Lambda
+Resources:
+  CerberusIpTranslatorLambdaIncomingWebhookFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: >-
+        com.nike.cerberus.lambda.waf.Handler::handleSlackOutgoingWebHookEvent
+      Runtime: java8
+      Description: Function for ingesting initial Slack message and doing search look up and response
+      MemorySize: 512
+      Timeout: 300
+      CodeUri: @@CODE_URI@@
+      Role: arn:aws:iam::933764306573:role/cerberus-admin-iam-role-CerberusAdminIamRole-1XWL96YFLUYCC
+      Environment:
+        Variables:
+          SLACK_INCOMING_WEB_HOOK_URL: https://hooks.slack.com/services/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
+          SLACK_TOKEN: 23DEpXRZsPczPOpXqCrm0YAC
+          SLACK_BOT_NAME: Ip Translator
+          SLACK_BOT_ICON_URL: https://s3.postimg.org/w438py1hv/awesom_o.jpg
+          REGION: !Ref AWS::Region
+          CERBERUS_URL: https://prod2.cerberus.nikecloud.com
+      Events:
+        PostResource:
+          Type: Api
+          Properties:
+            Path: /outgoing-webhook/
+            Method: post

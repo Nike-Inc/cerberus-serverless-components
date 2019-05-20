@@ -28,6 +28,7 @@ you will need to create profiles for your desired environment.
 1. Create your environment specific props files such as dev.properties and prod.properties.
     - Properties such as `cerberus.url` will go into the env specific props file.
 
+
 We keep our profiles in a separate repo and create soft links to the profile dir in this project, and ignore them in the .gitignore file
 
 ## License
