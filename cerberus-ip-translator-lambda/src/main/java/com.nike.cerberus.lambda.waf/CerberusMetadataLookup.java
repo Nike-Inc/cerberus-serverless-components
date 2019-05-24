@@ -98,7 +98,7 @@ public class CerberusMetadataLookup {
 
         for (Map<String, String> entry : sdbMetadata) {
 
-            if (entry.get("name").equals(sdbName)) {
+            if (entry.get("path").contains(sdbName)) {
                 owner.add(entry.get("owner"));
                 if (entry.get("created_by").contains(EMAIL_SYMBOL)) owner.add(entry.get("created_by"));
                 if (entry.get("last_updated_by").contains(EMAIL_SYMBOL)
