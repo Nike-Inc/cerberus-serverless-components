@@ -36,10 +36,10 @@ public class Main {
                         "timestamp=1482533609.000478&" +
                         "user_id=U3JS3RQNA&" +
                         "user_name=fieldju&" +
-                        "text=ALB Log Event Handler - Rate Limiting Processor run summary\\n" +
-                        "Running Environment: prod2\\n" +
-                        "IP addresses removed from auto block list: \\n" +
-                        "IP addresses added to auto block list: 34.249.129.124 (test.com), 34.251.252.31 (foo.bar.com), \\n" +
+                        "text=ALB Log Event Handler - Rate Limiting Processor run summary\\\n" +
+                        "Running Environment: prod2\\\n" +
+                        "IP addresses removed from auto block list: \\\n" +
+                        "IP addresses added to auto block list: 34.249.129.124 (test.com), 34.251.252.31 (foo.bar.com), \\\n" +
                         "IP addresses already on auto block list:"
         );
 

@@ -70,7 +70,7 @@ public class CerberusMetadataLookup {
 
         try {
             Request request = new Request.Builder()
-                .url(cerberusUrl + "/v1/metadata?limit=2000&offset=0")
+                .url(cerberusUrl + "/v1/metadata?limit=10000&offset=0")
                 .addHeader(CERBERUS_TOKEN,chain.getCredentials().getToken())
                 .get()
                 .build();
