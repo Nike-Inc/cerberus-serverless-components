@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fieldju.commons.EnvUtils;
 import com.nike.cerberus.client.auth.DefaultCerberusCredentialsProviderChain;
 import okhttp3.*;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.util.*;
@@ -34,6 +35,8 @@ public class CerberusMetadataLookup {
     private static final TimeUnit DEFAULT_TIMEOUT_UNIT = TimeUnit.MILLISECONDS;
     private static final String CERBERUS_TOKEN = "X-Cerberus-Token";
     private static final String EMAIL_SYMBOL = "@";
+
+    private final Logger logger = Logger.getLogger(getClass());
 
     /**
      * Modify "MODERN_TLS" to remove TLS v1.0 and 1.1
@@ -64,24 +67,22 @@ public class CerberusMetadataLookup {
 
         String cerberusUrl = String.format("https://%s.cerberus.nikecloud.com", environment);
         OkHttpClient httpClient = createHttpClient();
-        HashMap result;
         String region = EnvUtils.getRequiredEnv("REGION");
         DefaultCerberusCredentialsProviderChain chain = new DefaultCerberusCredentialsProviderChain(cerberusUrl, region);
 
-        try {
-            Request request = new Request.Builder()
-                .url(cerberusUrl + "/v1/metadata?limit=2000&offset=0")
-                .addHeader(CERBERUS_TOKEN,chain.getCredentials().getToken())
-                .get()
-                .build();
-            Response response = httpClient.newCall(request).execute();
-            String responseBody = response.body().string();
-            result = new ObjectMapper().readValue(responseBody, HashMap.class);
-        } catch (IOException e) {
-            throw new RuntimeException("I/O error while communicating with Cerberus", e);
-        }
+        ArrayList<Map<String, String>> sdbMetadata = new ArrayList<>();
+        String offset = "0";
+        Boolean hasNext;
 
-        ArrayList<Map<String, String>> sdbMetadata = (ArrayList<Map<String, String>>) result.get("safe_deposit_box_metadata");
+        do {
+            HashMap result = executeRequest(httpClient, chain, cerberusUrl, offset);
+            sdbMetadata.addAll((ArrayList<Map<String, String>>) result.get("safe_deposit_box_metadata"));
+
+            offset = result.get("next_offset").toString();
+            hasNext = Boolean.valueOf(result.get("has_next").toString());
+
+        } while (hasNext);
+
         if (sdbMetadata.isEmpty()) {
             throw new NullPointerException("SDB Metadata is empty");
         }
@@ -98,7 +99,7 @@ public class CerberusMetadataLookup {
 
         for (Map<String, String> entry : sdbMetadata) {
 
-            if (entry.get("name").equals(sdbName)) {
+            if (entry.get("path").contains(sdbName) && !sdbName.isEmpty()) {
                 owner.add(entry.get("owner"));
                 if (entry.get("created_by").contains(EMAIL_SYMBOL)) owner.add(entry.get("created_by"));
                 if (entry.get("last_updated_by").contains(EMAIL_SYMBOL)
@@ -114,12 +115,32 @@ public class CerberusMetadataLookup {
                             && !entry.get("last_updated_by").equals(entry.get("created_by"))) {
                         owner.add(entry.get("last_updated_by"));
                     }
-                return owner;
+                    return owner;
                 }
             }
         }
 
         owner.add("No owner found");
         return owner;
+    }
+
+    private HashMap executeRequest(OkHttpClient httpClient, DefaultCerberusCredentialsProviderChain chain,
+                                   String cerberusUrl, String offset) {
+
+        HashMap result;
+        try {
+            Request request = new Request.Builder()
+                    .url(cerberusUrl + "/v1/metadata?limit=500&offset=" + offset)
+                    .addHeader(CERBERUS_TOKEN, chain.getCredentials().getToken())
+                    .get()
+                    .build();
+            Response response = httpClient.newCall(request).execute();
+            String responseBody = response.body().string();
+            result = new ObjectMapper().readValue(responseBody, HashMap.class);
+        } catch (IOException e) {
+            throw new RuntimeException("I/O error while communicating with Cerberus", e);
+        }
+
+        return result;
     }
 }
