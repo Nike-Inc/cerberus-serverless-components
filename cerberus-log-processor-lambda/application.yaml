@@ -39,6 +39,7 @@ Parameters:
   SlackWebHookUrl:
     Type: String
     Description: The Slack HTTP endpoint to which the Lambda will post rate limit notifications
+    SlackWebHookUrl: true
   AthenaDatabaseName:
     Type: String
     Description: The name of ALB log's Athena database
