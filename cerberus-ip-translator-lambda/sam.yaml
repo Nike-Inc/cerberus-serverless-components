@@ -11,6 +11,7 @@ Parameters:
   SlackWebHookUrl:
     Type: String
     Description: The Slack HTTP endpoint to which the Lambda will post rate limit notifications
+    NoEcho: true
   CerberusAdminIamRoleArn:
     Type: String
     Description: The Cerberus Admin Role Arn to use.
