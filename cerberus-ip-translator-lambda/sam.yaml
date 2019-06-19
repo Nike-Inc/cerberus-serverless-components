@@ -8,6 +8,7 @@ Parameters:
   SlackToken:
     Type: String
     Description: The Slack Icoming Webhook token
+    NoEcho: true
   SlackWebHookUrl:
     Type: String
     Description: The Slack HTTP endpoint to which the Lambda will post rate limit notifications
