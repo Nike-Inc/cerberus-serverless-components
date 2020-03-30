@@ -2,17 +2,16 @@ language: java
 jdk:
 - oraclejdk8
 script:
-  - ./gradlew clean cerberus-log-processor-lambda:shadowJar
+- "./gradlew clean cerberus-log-processor-lambda:shadowJar"
 after_success:
 - "./gradlew jacocoTestReport coveralls --stacktrace"
 deploy:
   skip_cleanup: true
   provider: releases
   api_key:
-    secure: 5YhoOioiwSWY6D1tuD/QgL84DrPt39ZBYvn3eIs3ccBcC6cgTrUJ5eB3bHR/yl9egmCC+UW1KCG+V2moDnCkIAkLCKvZrzNRpG+wwGYR/suYc2pwCmyCJYMOBHkdlFjP5xGnpCYmWJqIpklp/HZY45zQdOMVFunbIhDv6qXEwfJoEsGB4U2NeYBa08z1MH9n8figy4pRvmAAlGiJsBfcwAlBYpsHni0oPAf61W1kCDpB1gkFfi2aEK31lFPZh5h2eR5aR8r9aI5KDePjWijbu2IdFLnN60JNrWrw6PL+Z7ct3V1DsqJ3/gMhNUOjeffuCjEY0h/knUy6Jt7R7TpEZTKmjwXr434LIdinPyWUnzwk60g9Dj/Sjg4wclL98lpwL5S5fgmWFr2FWEnYrJSrCYTZF1oBToG7F12kdzEYCkiOWv28SXonKtAFmuJnxvyOFaVDOSjIJCqBOTJb8QShB+SVCODiPHZCIzWX9+bCibbOxt+GE7QREaaNHIlowNxaNSVQziDw7fBNk+RBKGTOBWnRhRRAfqmvRy4l+wsLN4yXbxrx8DsEtCd13oaNgdmuLC9SlYL4XWKZ7+R17AaEOjmkm/0Xqneb0klWzg+pafaQlU3BrSlGHpH3Gckn3aRA5ITNPKh4djv5h2weLiat/Uwnw0XQdchlK7V9MibtESA=
+    secure: e2OLsAjvpUtX5nJeQNib9y9kdtacdhJf/fqUz1Y+7sHQVngilXHYfPTFQqWcyu7HHGEFG1q/2F/XLrde9Qi9evb0dMoKHt0LFkyzAo74k26iDxTKCTPlUdh6BPHfa9fMAZvZ+YLOm/Be9xOq977dwrGHUCRh+xU5gIZ2y736zVRnObLpkUzR84aamIxCce2i7iZ0Jld1PwaT0X8pqbGHZQCVfxxYcKuhNN4nPD6TGtUye/W3/y9ilCwVxTL6p4AS09UXK5Z5otVd5mQbEL9JEsuJZ5fg42g7fscH1bLVCHGnHiQGBmaOyFrBnUSJ16NTrLyf4Y7qCFHCcecwkSZWlsSs6eZbc3yimYI36gkin/cjtVCOibWISdQOl4JohY6HLcHxcqvb1fjXQqsAuoi3gStrPSOjdIIPElb6E2vKRIRh+nyEjGwPsvQmrqO2dli3E15tNfGCYArqQI8utd3yo4jo8+CE/t1/GsBxMB/98pjvKwttqMXG0f9aEs/HQCKb5oW1KWd1wGgWnGS848IPq3xNOo43rcYIDgpBffJkZDku5ypcLBpUj9N6zcGhlABVvkqB7K8vBpHckPc/KUwjwZOXEnm0eYbXnI0ubdgMQ3UDzNUNrPFaLvCAa8NSOm8jB7ymXVoz1DzVth3tNNxlAP5a83UgI5EyvqCu5Gb1lMA=
   file_glob: true
-  file:
-    - cerberus-log-processor-lambda/build/libs/cerberus-log-processor-lambda*
+  file: cerberus-log-processor-lambda/build/libs/cerberus-log-processor-lambda*
   on:
     repo: Nike-Inc/cerberus-serverless-components
     tags: true
