@@ -79,7 +79,7 @@ public class AthenaQuery {
             state = athena.getQueryExecution(new GetQueryExecutionRequest().withQueryExecutionId(id)).getQueryExecution().getStatus().getState();
             logger.info(String.format("Polling for query to finish: current status: %s", state));
             Thread.sleep(1000);
-        } while (state.equals("RUNNING"));
+        } while (state.equals("RUNNING") || state.equals("QUEUED"));
 
         logger.info(String.format("The query: %s is in state: %s, fetching results", id, state));
 
