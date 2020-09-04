@@ -89,3 +89,4 @@ src/main/resources/cloudformation/**
 /profile/dev.properties
 /profile/prod.properties
 /profile/global.properties
+/profile/cnprod.properties
