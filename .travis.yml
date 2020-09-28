@@ -16,3 +16,10 @@ deploy:
   on:
     repo: Nike-Inc/cerberus-serverless-components
     tags: true
+notifications:
+  slack:
+    if: branch = master AND type = push
+    on_success: change
+    on_failure: always
+    rooms:
+      -  secure: jdeqaaz3LmlDPF16Ikd/0iGuIEr1kCWwzufkJncYsIY6E3wRy/7SJxMpnrTnXC8lpobl6nbrW8o2c1uFeZVz4sCt6UNwTUcHkVqNFmH6JDoyJL13YOsOdu1zLXjgnJhgWcIAHsZgE6HzdVwBADxLGLUuh9FZMox4GxtCX9QfKrITA2R64ZMfQ3VU2BZuKXLoQx30al/gcWJakDTpIlOg0GWTYDCL7G6BnZbybnoPeHRX1twXwYj/wmaU+DzJJ+nKOD5WkqecHwSCk2CQheEQNoosQi+rQTuMDYNrto0wi59LplCgT4/5KowBXz7EKBIw51P540/s7g/DbQHBc2Nej3snt0FnNGUn73PJ/simTlqVP7ngByB7f6Qq//e2oHv3RCXPg3UVEn3PYyAQ2bPAOfiu9HjdztI3mUJFFOlzfGRV7zd0lOz8NL7yj6MXjHOxQoYIWJhODmVhixDkJnrFwzzxBZJWVzlmx0C4BDeIS+nRKtdPjp9L3ojPQWhaRKp20BiRI9PMyXEou8mpfDV9gm+Tr2xdlY4x0WXTnKdo86igGqfgXKKOdk1JY8IOiyrv2BzRV5yPaFzTk2F/f8ehGCEUPFubTlGDU4p2K231j3XJj9d7vtiYq2/SZgv156kSFdCLZsANsME1b68BmUpL7iIpAH/dPwqk6naCDqvw81w=
