@@ -25,12 +25,6 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: build/libs/cerberus.jar
-          tag: ${{ github.ref }}
-      - name: Upload to GitHub release
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: cerberus-log-processor-lambda/build/libs/cerberus-log-processor-lambda*
           tag: ${{ github.ref }}
 
