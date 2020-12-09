@@ -89,6 +89,16 @@ public class CerberusMetadataLookup {
         return sdbMetadata;
     }
 
+    private ArrayList<String> getOwner(ArrayList<String> owner, Map<String, String> entry) {
+        owner.add(entry.get("owner"));
+        if (entry.get("created_by").contains(EMAIL_SYMBOL)) owner.add(entry.get("created_by"));
+        if (entry.get("last_updated_by").contains(EMAIL_SYMBOL)
+                && !entry.get("last_updated_by").equals(entry.get("created_by"))) {
+            owner.add(entry.get("last_updated_by"));
+        }
+        return owner;
+    }
+
     public ArrayList<String> searchCerberusMetadata(ArrayList<Map<String, String>> sdbMetadata, String sdbName, String principalName) {
 
         if (sdbMetadata == null) {
@@ -98,26 +108,16 @@ public class CerberusMetadataLookup {
         ArrayList<String> owner = new ArrayList<>();
 
         for (Map<String, String> entry : sdbMetadata) {
-
-            if (entry.get("path").contains(sdbName) && !sdbName.isEmpty()) {
-                owner.add(entry.get("owner"));
-                if (entry.get("created_by").contains(EMAIL_SYMBOL)) owner.add(entry.get("created_by"));
-                if (entry.get("last_updated_by").contains(EMAIL_SYMBOL)
-                        && !entry.get("last_updated_by").equals(entry.get("created_by"))) {
-                    owner.add(entry.get("last_updated_by"));
-                }
-                return owner;
-            } else {
-                if (entry.containsValue(principalName)) {
-                    owner.add(entry.get("owner"));
-                    if (entry.get("created_by").contains(EMAIL_SYMBOL)) owner.add(entry.get("created_by"));
-                    if (entry.get("last_updated_by").contains(EMAIL_SYMBOL)
-                            && !entry.get("last_updated_by").equals(entry.get("created_by"))) {
-                        owner.add(entry.get("last_updated_by"));
-                    }
-                    return owner;
-                }
+            if (entry.get("name").equals(sdbName) && !sdbName.isEmpty()) {
+                return getOwner(owner, entry);
             }
+        }
+
+        for (Map<String, String> entry : sdbMetadata) {
+            if (entry.containsValue(principalName)) {
+                return getOwner(owner, entry);
+            }
+
         }
 
         owner.add("No owner found");

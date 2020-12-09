@@ -40,6 +40,39 @@ public class CerberusMetadataLookupTest {
             "      }]\n" +
             "}";
 
+    private static final String mockResponseBodyMultiSdbString = "[ {\n" +
+            "            \"name\" : \"test sdb\",\n" +
+            "            \"path\" : \"test/path/app\",\n" +
+            "            \"category\" : \"Applications\",\n" +
+            "            \"owner\" : \"Test.Owner\",\n" +
+            "            \"description\" : \"test sdb\",\n" +
+            "            \"created_ts\" : \"2019-05-13T20:13:56.799Z\",\n" +
+            "            \"created_by\" : \"test.user@nike.com\",\n" +
+            "            \"last_updated_ts\" : \"2019-05-13T20:13:56.799Z\",\n" +
+            "            \"last_updated_by\" : \"arn:aws:iam::111111111111:role/example/role\",\n" +
+            "            \"user_group_permissions\" : {  },\n" +
+            "            \"iam_role_permissions\" : {\n" +
+            "               \"arn:aws:iam::111111111111:role/example/role\" : \"read\"\n" +
+            "          },\n" +
+            "       \"data\" : null\n" +
+            "      }," +
+            "      {\n" +
+            "            \"name\" : \"test sdb 2\",\n" +
+            "            \"path\" : \"test/path/app\",\n" +
+            "            \"category\" : \"Applications\",\n" +
+            "            \"owner\" : \"Test.Owner2\",\n" +
+            "            \"description\" : \"test sdb 2\",\n" +
+            "            \"created_ts\" : \"2019-05-13T20:13:56.799Z\",\n" +
+            "            \"created_by\" : \"test.user2@nike.com\",\n" +
+            "            \"last_updated_ts\" : \"2019-05-13T20:13:56.799Z\",\n" +
+            "            \"last_updated_by\" : \"arn:aws:iam::111111111111:role/example2/role\",\n" +
+            "            \"user_group_permissions\" : {  },\n" +
+            "            \"iam_role_permissions\" : {\n" +
+            "               \"arn:aws:iam::111111111111:role/example/role\" : \"read\"\n" +
+            "          },\n" +
+            "       \"data\" : null\n" +
+            "      }]\n";
+
     private static final String emptyMetadataResponseBodyString = "{  \n" +
             "   \"has_next\":false,\n" +
             "   \"next_offset\":0,\n" +
@@ -106,6 +139,19 @@ public class CerberusMetadataLookupTest {
         assertTrue(results.contains("Test.Owner"));
         assertTrue(results.contains("test.user@nike.com"));
         assertFalse(results.contains("arn:aws:iam::111111111111:role/example/role"));
+    }
+
+    @Test
+    public void test_search_cerberus_metadata_multiple_sdb_contains_name_successful() throws IOException {
+        ArrayList<Map<String, String>> sdbMetadata = (ArrayList<Map<String, String>>) new ObjectMapper().readValue(mockResponseBodyMultiSdbString, ArrayList.class);
+
+        String sdbName = "test sdb 2";
+        String principalName = "arn:aws:iam::111111111111:role/example2/role";
+
+        ArrayList<String> results = cerberusMetadataLookup.searchCerberusMetadata(sdbMetadata, sdbName, principalName);
+        assertTrue(results.contains("Test.Owner2"));
+        assertTrue(results.contains("test.user2@nike.com"));
+        assertFalse(results.contains("arn:aws:iam::111111111111:role/example2/role"));
     }
 
     @Test
