@@ -145,7 +145,7 @@ public class CerberusMetadataLookupTest {
     public void test_search_cerberus_metadata_multiple_sdb_contains_name_successful() throws IOException {
         ArrayList<Map<String, String>> sdbMetadata = (ArrayList<Map<String, String>>) new ObjectMapper().readValue(mockResponseBodyMultiSdbString, ArrayList.class);
 
-        String sdbName = "test-sdb-2";
+        String sdbName = "test-sdb";
         String principalName = "arn:aws:iam::111111111111:role/example2/role";
 
         ArrayList<String> results = cerberusMetadataLookup.searchCerberusMetadata(sdbMetadata, sdbName, principalName);
