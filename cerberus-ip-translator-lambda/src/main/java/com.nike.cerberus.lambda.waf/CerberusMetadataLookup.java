@@ -108,7 +108,7 @@ public class CerberusMetadataLookup {
         ArrayList<String> owner = new ArrayList<>();
 
         for (Map<String, String> entry : sdbMetadata) {
-            if (entry.get("name").equals(sdbName) && !sdbName.isEmpty()) {
+            if (entry.get("path").contains(String.format("/%s/", sdbName)) && !sdbName.isEmpty()) {
                 return getOwner(owner, entry);
             }
         }

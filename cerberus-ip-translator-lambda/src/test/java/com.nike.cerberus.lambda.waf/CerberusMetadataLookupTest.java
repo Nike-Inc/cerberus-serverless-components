@@ -24,7 +24,7 @@ public class CerberusMetadataLookupTest {
             "        \"total_sdbcount\" : 1,\n" +
             "        \"safe_deposit_box_metadata\" : [ {\n" +
             "            \"name\" : \"test sdb\",\n" +
-            "            \"path\" : \"test/path/app\",\n" +
+            "            \"path\" : \"test/test-sdb/app\",\n" +
             "            \"category\" : \"Applications\",\n" +
             "            \"owner\" : \"Test.Owner\",\n" +
             "            \"description\" : \"test sdb\",\n" +
@@ -42,7 +42,7 @@ public class CerberusMetadataLookupTest {
 
     private static final String mockResponseBodyMultiSdbString = "[ {\n" +
             "            \"name\" : \"test sdb\",\n" +
-            "            \"path\" : \"test/path/app\",\n" +
+            "            \"path\" : \"test/first-test-sdb/app\",\n" +
             "            \"category\" : \"Applications\",\n" +
             "            \"owner\" : \"Test.Owner\",\n" +
             "            \"description\" : \"test sdb\",\n" +
@@ -58,7 +58,7 @@ public class CerberusMetadataLookupTest {
             "      }," +
             "      {\n" +
             "            \"name\" : \"test sdb 2\",\n" +
-            "            \"path\" : \"test/path/app\",\n" +
+            "            \"path\" : \"test/test-sdb/app\",\n" +
             "            \"category\" : \"Applications\",\n" +
             "            \"owner\" : \"Test.Owner2\",\n" +
             "            \"description\" : \"test sdb 2\",\n" +
@@ -132,8 +132,8 @@ public class CerberusMetadataLookupTest {
     public void test_search_cerberus_metadata_successful() throws IOException {
         HashMap responseMap = new ObjectMapper().readValue(mockResponseBodyString, HashMap.class);
         ArrayList<Map<String, String>> sdbMetadata = (ArrayList<Map<String, String>>) responseMap.get("safe_deposit_box_metadata");
-        String sdbName = "test sdb";
-        String principalName = "arn:aws:iam::111111111111:role/example/role";
+        String sdbName = "test-sdb";
+        String principalName = "arn:aws:iam::111111111111:role/example2/role";
 
         ArrayList<String> results = cerberusMetadataLookup.searchCerberusMetadata(sdbMetadata, sdbName, principalName);
         assertTrue(results.contains("Test.Owner"));
@@ -145,7 +145,7 @@ public class CerberusMetadataLookupTest {
     public void test_search_cerberus_metadata_multiple_sdb_contains_name_successful() throws IOException {
         ArrayList<Map<String, String>> sdbMetadata = (ArrayList<Map<String, String>>) new ObjectMapper().readValue(mockResponseBodyMultiSdbString, ArrayList.class);
 
-        String sdbName = "test sdb 2";
+        String sdbName = "test-sdb";
         String principalName = "arn:aws:iam::111111111111:role/example2/role";
 
         ArrayList<String> results = cerberusMetadataLookup.searchCerberusMetadata(sdbMetadata, sdbName, principalName);
