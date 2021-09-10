@@ -310,6 +310,7 @@ public class RateLimitingProcessor implements Processor {
                 sleep(1, TimeUnit.SECONDS);
                 return getIpSet(ipSetId, retryCount + 1);
             }
+            log.error(String.format("Could not get IP set with ID: '%s'", ipSetId));
             throw e;
         }
         result.getIPSet().getIPSetDescriptors().forEach(ipSetDescriptor -> {

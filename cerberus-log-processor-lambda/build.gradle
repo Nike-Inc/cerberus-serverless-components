@@ -1,5 +1,6 @@
 version '3.0.1'
 
+import static groovy.json.JsonOutput.*
 import com.amazonaws.auth.policy.Policy
 import com.amazonaws.auth.policy.Principal
 import com.amazonaws.auth.policy.Statement
@@ -24,21 +25,21 @@ buildscript {
 }
 
 dependencies {
-    compile group: 'com.amazonaws', name: 'aws-lambda-java-core', version: '1.1.0'
-    compile group: 'com.amazonaws', name: 'aws-lambda-java-log4j', version: '1.0.0'
-    compile group: 'com.amazonaws', name: 'aws-lambda-java-events', version: '1.3.0'
-    compile group: 'com.amazonaws', name: 'aws-java-sdk-cloudformation', version: '1.11.272'
-    compile group: 'com.amazonaws', name: 'aws-java-sdk-lambda', version: '1.11.272'
+    compile group: 'com.amazonaws', name: 'aws-lambda-java-core', version: '1.2.1'
+    compile group: 'com.amazonaws', name: 'aws-lambda-java-log4j', version: '1.0.1'
+    compile group: 'com.amazonaws', name: 'aws-lambda-java-events', version: '3.10.0'
+    compile group: 'com.amazonaws', name: 'aws-java-sdk-cloudformation', version: '1.12.63'
+    compile group: 'com.amazonaws', name: 'aws-java-sdk-lambda', version: '1.12.63'
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.8.3'
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.8.3'
     compile group: 'com.google.guava', name: 'guava', version: '19.0'
     compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
     compile group: 'commons-net', name: 'commons-net', version: '3.5'
-    compile group: 'com.amazonaws', name: 'aws-java-sdk-waf', version: '1.11.221'
+    compile group: 'com.amazonaws', name: 'aws-java-sdk-waf', version: '1.12.63'
     compile group: 'com.fieldju', name: 'slack-client', version: '2.0.0'
     compile group: 'com.brsanthu', name: 'google-analytics-java', version: '1.1.2'
-    compile group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.272'
-    compile group: 'com.amazonaws', name: 'aws-java-sdk-athena', version: '1.11.301'
+    compile group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.12.63'
+    compile group: 'com.amazonaws', name: 'aws-java-sdk-athena', version: '1.12.63'
 
     testCompile group: 'junit', name: 'junit', version: '4.12'
     testCompile group: 'org.mockito', name: 'mockito-all', version: '1.9.5'
@@ -114,13 +115,18 @@ Stack getCloudFormationStack(AmazonCloudFormation cloudFormationClient, String s
 
 void addLambdaPermissionToS3Bucket(AmazonS3 s3Client, String s3BucketName, String lambdaIamRoleArn) {
     BucketPolicy bucketPolicy = s3Client.getBucketPolicy(s3BucketName)
-    Policy policy = Policy.fromJson(bucketPolicy.getPolicyText())
+    String policyText = bucketPolicy.getPolicyText()
+    println "Current policy:"
+    println String.format("%s/n/n", policyText)
+    Policy policy = Policy.fromJson(policyText)
     Collection<Statement> statements = policy.getStatements()
     statements.add(new Statement(Statement.Effect.Allow)
             .withActions(S3Actions.GetObject, S3Actions.PutObject)
             .withResources(new com.amazonaws.auth.policy.Resource("arn:aws:s3:::${s3BucketName}/*"))
             .withPrincipals(new Principal("AWS", lambdaIamRoleArn, false)))
 
+    println "New policy:"
+    println prettyPrint(policy.toJson())
     s3Client.setBucketPolicy(s3BucketName, policy.toJson())
     println "Added Lambda permission to S3 bucket policy"
 }
