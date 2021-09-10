@@ -1,6 +1,7 @@
 version '3.0.1'
 
-import static groovy.json.JsonOutput.*
+import static groovy.json.JsonOutput.prettyPrint
+import static groovy.json.JsonOutput.toJson
 import com.amazonaws.auth.policy.Policy
 import com.amazonaws.auth.policy.Principal
 import com.amazonaws.auth.policy.Statement
