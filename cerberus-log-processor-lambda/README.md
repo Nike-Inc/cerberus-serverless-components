@@ -19,3 +19,7 @@ We would like to have a processor for auto blocking ips that spam bad requests.
 ## Building
 
 To build and deploy the fat jar required for Lambda run `./gradlew cerberus-log-processor-lambda:sJ cerberus-log-processor-lambda:deploySam -Penv=[ENVIRONMENT]`
+
+## Updating
+
+To update with a new version, you'll need to remove the principal added to the alb log bucket and then delete stack before running the above command.

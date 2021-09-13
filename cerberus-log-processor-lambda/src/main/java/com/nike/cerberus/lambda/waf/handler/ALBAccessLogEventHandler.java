@@ -1,12 +1,11 @@
 package com.nike.cerberus.lambda.waf.handler;
 
-import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.waf.AWSWAFRegional;
 import com.amazonaws.services.waf.AWSWAFRegionalClientBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fieldju.slackclient.Message;
 import com.fieldju.slackclient.SlackClient;
 import com.google.common.annotations.VisibleForTesting;
@@ -32,8 +31,6 @@ public class ALBAccessLogEventHandler {
 
     private final Logger log = Logger.getLogger(getClass());
 
-    private final AmazonS3 amazonS3Client;
-
     private final ObjectMapper objectMapper;
 
     private final LogProcessorLambdaConfig logProcessorLambdaConfig;
@@ -43,21 +40,20 @@ public class ALBAccessLogEventHandler {
     private AthenaService athenaService;
 
     public ALBAccessLogEventHandler() {
-        this(new AmazonS3Client(),
-                AWSWAFRegionalClientBuilder.standard()
-                        .withRegion(Regions.US_WEST_2)
-                        .build(),
-                new LogProcessorLambdaConfig());
+        this(AmazonS3ClientBuilder.standard()
+              .withRegion(System.getenv("AWS_REGION")).build(),
+        AWSWAFRegionalClientBuilder.standard()
+              .withRegion(System.getenv("AWS_REGION")).build(),
+        new LogProcessorLambdaConfig());
     }
 
     public ALBAccessLogEventHandler(AmazonS3 amazonS3Client,
                                     AWSWAFRegional awsWaf,
                                     LogProcessorLambdaConfig logProcessorLambdaConfig) {
 
-        this.amazonS3Client = amazonS3Client;
         this.logProcessorLambdaConfig = logProcessorLambdaConfig;
         objectMapper = new ObjectMapper();
-        objectMapper.setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
+        objectMapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
 
         // New processors would need there own ip sets as there is a hard limit of 1000 ips and the
         // RateLimitingProcessor truncates the set and removes any ips from the set that it doesn't know about

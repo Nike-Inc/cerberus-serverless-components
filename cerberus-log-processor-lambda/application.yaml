@@ -25,13 +25,13 @@ Parameters:
     Type: String
     Description: The ID of the Cerberus manual auto-blacklist IP set.
   RequestPerIntervalLimit:
-    Type: Number
+    Type: String
     Description: The number of requests per interval allowed per IP address
   IntervalInMins:
-    Type: Number
+    Type: String
     Description: The interval in minutes of requests per interval allowed per IP address
   ViolationBlacklistDurationInMins:
-    Type: Number
+    Type: String
     Description: The number of minutes to blacklist an IP address for after it has violated the rate limit
   SlackIcon:
     Type: String
