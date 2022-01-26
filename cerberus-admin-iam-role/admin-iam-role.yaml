@@ -69,8 +69,8 @@ Resources:
                   - SNS:Publish
                 Resource: !ImportValue CerberusMetricsTopicARN
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AmazonAthenaFullAccess
-        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws-cn:iam::aws:policy/AmazonAthenaFullAccess
+        - arn:aws-cn:iam::aws:policy/AmazonS3FullAccess
 
 
 Outputs:

@@ -106,7 +106,7 @@ Resources:
         Version: '2012-10-17'
       Path: /
       ManagedPolicyArns:
-        - "arn:aws:iam::aws:policy/AmazonAthenaFullAccess"
+        - "arn:aws-cn:iam::aws:policy/AmazonAthenaFullAccess"
       Policies:
         - PolicyDocument:
             Statement:
@@ -158,5 +158,5 @@ Resources:
                 Effect: Allow
                 Resource:
                     - !Ref AlbLogBucketArn
-                    - 'arn:aws:s3:::*/*'
+                    - 'arn:aws-cn:s3:::*/*'
           PolicyName: S3BucketAccess

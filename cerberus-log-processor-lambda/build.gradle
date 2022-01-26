@@ -28,19 +28,19 @@ buildscript {
 dependencies {
     compile group: 'com.amazonaws', name: 'aws-lambda-java-core', version: '1.2.1'
     compile group: 'com.amazonaws', name: 'aws-lambda-java-log4j', version: '1.0.1'
-    compile group: 'com.amazonaws', name: 'aws-lambda-java-events', version: '3.10.0'
-    compile group: 'com.amazonaws', name: 'aws-java-sdk-cloudformation', version: '1.12.63'
-    compile group: 'com.amazonaws', name: 'aws-java-sdk-lambda', version: '1.12.63'
+    compile group: 'com.amazonaws', name: 'aws-lambda-java-events', version: '3.11.0'
+    compile group: 'com.amazonaws', name: 'aws-java-sdk-cloudformation', version: '1.12.145'
+    compile group: 'com.amazonaws', name: 'aws-java-sdk-lambda', version: '1.12.145'
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.8.3'
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.8.3'
     compile group: 'com.google.guava', name: 'guava', version: '19.0'
     compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
     compile group: 'commons-net', name: 'commons-net', version: '3.5'
-    compile group: 'com.amazonaws', name: 'aws-java-sdk-waf', version: '1.12.63'
+    compile group: 'com.amazonaws', name: 'aws-java-sdk-waf', version: '1.12.145'
     compile group: 'com.fieldju', name: 'slack-client', version: '2.0.0'
     compile group: 'com.brsanthu', name: 'google-analytics-java', version: '1.1.2'
-    compile group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.12.63'
-    compile group: 'com.amazonaws', name: 'aws-java-sdk-athena', version: '1.12.63'
+    compile group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.12.145'
+    compile group: 'com.amazonaws', name: 'aws-java-sdk-athena', version: '1.12.145'
 
     testCompile group: 'junit', name: 'junit', version: '4.12'
     testCompile group: 'org.mockito', name: 'mockito-all', version: '1.9.5'
@@ -75,7 +75,7 @@ shadowJar {
             AthenaTableName: getProfileProperty('log_processor.athena_table_name'),
             AthenaQueryResultBucketName: getProfileProperty('log_processor.athena_query_result_bucket_name'),
             AlbLogBucket: getProfileProperty('log_processor.alb_log_bucket'),
-            AlbLogBucketArn: "arn:aws:s3:::" + getProfileProperty('log_processor.alb_log_bucket')
+            AlbLogBucketArn: "arn:aws-cn:s3:::" + getProfileProperty('log_processor.alb_log_bucket')
     ]
     logStackOutputs = true
 }
@@ -114,6 +114,7 @@ Stack getCloudFormationStack(AmazonCloudFormation cloudFormationClient, String s
                 .get(0)
 }
 
+
 void addLambdaPermissionToS3Bucket(AmazonS3 s3Client, String s3BucketName, String lambdaIamRoleArn) {
     BucketPolicy bucketPolicy = s3Client.getBucketPolicy(s3BucketName)
     String policyText = bucketPolicy.getPolicyText()
@@ -121,13 +122,23 @@ void addLambdaPermissionToS3Bucket(AmazonS3 s3Client, String s3BucketName, Strin
     println String.format("%s/n/n", policyText)
     Policy policy = Policy.fromJson(policyText)
     Collection<Statement> statements = policy.getStatements()
+
+    // The below 4 lines are added to handle China ARNs, 
+    // For some unknown reason, the Java SDK will mangle China ARNs from aws-cn to awscn 
+    // We need to reconstruct the ARN 
+    List<Principal> policyPrincipals = statements.get(0).getPrincipals()
+    String mangledChinaPolicyPrincipalArn = policyPrincipals.get(0).getId()
+    String chinaPolicyPrincipalArn = mangledChinaPolicyPrincipalArn.replace("awscn", "aws-cn")
+    statements.get(0).withPrincipals(new Principal("AWS", chinaPolicyPrincipalArn, false))
+
     statements.add(new Statement(Statement.Effect.Allow)
             .withActions(S3Actions.GetObject, S3Actions.PutObject)
-            .withResources(new com.amazonaws.auth.policy.Resource("arn:aws:s3:::${s3BucketName}/*"))
+            .withResources(new com.amazonaws.auth.policy.Resource("arn:aws-cn:s3:::${s3BucketName}/*"))
             .withPrincipals(new Principal("AWS", lambdaIamRoleArn, false)))
 
     println "New policy:"
     println prettyPrint(policy.toJson())
+
     s3Client.setBucketPolicy(s3BucketName, policy.toJson())
     println "Added Lambda permission to S3 bucket policy"
 }
