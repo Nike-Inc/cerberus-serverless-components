@@ -9,22 +9,22 @@ dependencies {
   compile group: 'com.amazonaws', name: 'aws-lambda-java-core', version: '1.1.0'
   compile group: 'com.amazonaws', name: 'aws-lambda-java-log4j', version: '1.0.0'
   compile group: 'com.amazonaws', name: 'aws-lambda-java-events', version: '1.3.0'
-  compile group: 'com.amazonaws', name: 'aws-java-sdk-cloudformation', version: '1.11.272'
-  compile group: 'com.amazonaws', name: 'aws-java-sdk-lambda', version: '1.11.272'
+  compile group: 'com.amazonaws', name: 'aws-java-sdk-cloudformation', version: '1.12.145'
+  compile group: 'com.amazonaws', name: 'aws-java-sdk-lambda', version: '1.12.145'
   compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.8.3'
   compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.8.3'
   compile group: 'com.google.guava', name: 'guava', version: '19.0'
   compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
   compile group: 'commons-net', name: 'commons-net', version: '3.5'
-  compile group: 'com.amazonaws', name: 'aws-java-sdk-waf', version: '1.11.221'
+  compile group: 'com.amazonaws', name: 'aws-java-sdk-waf', version: '1.12.145'
   compile group: 'com.fieldju', name: 'slack-client', version: '2.0.0'
   compile group: 'com.brsanthu', name: 'google-analytics-java', version: '1.1.2'
-  compile group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.272'
-  compile group: 'com.amazonaws', name: 'aws-java-sdk-athena', version: '1.11.301'
+  compile group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.12.145'
+  compile group: 'com.amazonaws', name: 'aws-java-sdk-athena', version: '1.12.145'
   compile 'com.fieldju:commons:1.2.0'
-  compile 'com.nike:cerberus-client:7.0.0'
+  compile 'com.nike:cerberus-client:7.3.1'
 
-  compile "com.amazonaws:aws-java-sdk-sts:1.11.546"
+  compile 'com.amazonaws:aws-java-sdk-sts:1.12.145'
   compile "com.squareup.okhttp3:okhttp:3.9.0"
   compile 'de.vandermeer:asciitable:0.3.2'
   compile group: 'com.github.seratch', name: 'jslack', version: '1.5.6';
@@ -49,10 +49,12 @@ dependencies {
     '@@CODE_URI@@': "${project.buildDir}${File.separator}libs${File.separator}${project.getName()}-${version}.jar"
   ]
   parameterOverrides = [
-    SlackWebHookUrl: getProfileProperty('slack.outgoing_web_hook.url'),
-    SlackIcon: getProfileProperty('slack.outgoing_web_hook.icon'),
-    SlackToken: getProfileProperty('slack.incoming_web_hook.token'),
-    CerberusAdminIamRoleArn: getProfileProperty('cerberus.lambda.admin_arn'),
+          CerberusUrl: getProfileProperty('cerberus.url'),
+          AthenaQueryResultsBucket: getProfileProperty('ip_translator.athena_query_result_bucket_url'),
+          SlackWebHookUrl: getProfileProperty('slack.outgoing_web_hook.url'),
+          SlackIcon: getProfileProperty('slack.outgoing_web_hook.icon'),
+          SlackToken: getProfileProperty('slack.incoming_web_hook.token'),
+          CerberusAdminIamRoleArn: getProfileProperty('cerberus.lambda.admin_arn'),
   ]
   logStackOutputs = true
 }

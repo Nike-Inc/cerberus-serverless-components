@@ -16,6 +16,12 @@ Parameters:
   CerberusAdminIamRoleArn:
     Type: String
     Description: The Cerberus Admin Role Arn to use.
+  AthenaQueryResultsBucket:
+    Type: String
+    Description: The Athena query results bucket
+  CerberusUrl:
+    Type: String
+    Description: The Cerberus URL to gather SDB metadata
 Resources:
   CerberusIpTranslatorLambdaIncomingWebhookFunction:
     Type: 'AWS::Serverless::Function'
@@ -30,6 +36,8 @@ Resources:
       Role: !Ref CerberusAdminIamRoleArn
       Environment:
         Variables:
+          CERBERUS_URL: !Ref CerberusUrl
+          ATHENA_QUERY_RESULTS_BUCKET: !Ref AthenaQueryResultsBucket
           SLACK_INCOMING_WEB_HOOK_URL: !Ref SlackWebHookUrl
           SLACK_TOKEN: !Ref SlackToken
           SLACK_BOT_ICON_URL: !Ref SlackIcon

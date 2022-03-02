@@ -19,6 +19,7 @@ package com.nike.cerberus.lambda.waf;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fieldju.commons.EnvUtils;
 import com.nike.cerberus.client.auth.DefaultCerberusCredentialsProviderChain;
+import com.nike.cerberus.client.auth.aws.StsCerberusCredentialsProvider;
 import okhttp3.*;
 import org.apache.log4j.Logger;
 
@@ -64,27 +65,45 @@ public class CerberusMetadataLookup {
      * Obtains Cerberus Metadata which is a list of SDB summaries
      */
     public ArrayList<Map<String, String>> getCerberusMetadata(String environment) {
+        String cerberusUrl = System.getenv("CERBERUS_URL");
+        String region = System.getenv("REGION");
 
-        String cerberusUrl = String.format("https://%s.cerberus.nikecloud.com", environment);
         OkHttpClient httpClient = createHttpClient();
-        String region = EnvUtils.getRequiredEnv("REGION");
-        DefaultCerberusCredentialsProviderChain chain = new DefaultCerberusCredentialsProviderChain(cerberusUrl, region);
+        DefaultCerberusCredentialsProviderChain chain = null;
+        try{
+            chain = new DefaultCerberusCredentialsProviderChain(cerberusUrl, region);
+        }catch (Exception e){
+            logger.error(e.toString());
+            throw e;
+        }
+        logger.info("Created Cerberus provider chain!");
 
         ArrayList<Map<String, String>> sdbMetadata = new ArrayList<>();
         String offset = "0";
-        Boolean hasNext;
+        Boolean hasNext = false;
 
         do {
             HashMap result = executeRequest(httpClient, chain, cerberusUrl, offset);
-            sdbMetadata.addAll((ArrayList<Map<String, String>>) result.get("safe_deposit_box_metadata"));
 
-            offset = result.get("next_offset").toString();
-            hasNext = Boolean.valueOf(result.get("has_next").toString());
+            if(result == null){
+                logger.info("SDB request got null");
+                continue;
+            }
 
+            try{
+                sdbMetadata.addAll((ArrayList<Map<String, String>>) result.get("safe_deposit_box_metadata"));
+            }catch (Exception e){
+                logger.info("Caught Exception: " + e);
+            }finally{
+                offset = result.get("next_offset").toString();
+                hasNext = Boolean.valueOf(result.get("has_next").toString());
+            }
         } while (hasNext);
 
         if (sdbMetadata.isEmpty()) {
-            throw new NullPointerException("SDB Metadata is empty");
+            String emptyMsg = "SDB Metadata is empty";
+            logger.info(emptyMsg);
+            throw new NullPointerException(emptyMsg);
         }
         return sdbMetadata;
     }
@@ -117,7 +136,6 @@ public class CerberusMetadataLookup {
             if (entry.containsValue(principalName)) {
                 return getOwner(owner, entry);
             }
-
         }
 
         owner.add("No owner found");
@@ -126,7 +144,7 @@ public class CerberusMetadataLookup {
 
     private HashMap executeRequest(OkHttpClient httpClient, DefaultCerberusCredentialsProviderChain chain,
                                    String cerberusUrl, String offset) {
-
+        logger.info("Executing metadata get...");
         HashMap result;
         try {
             Request request = new Request.Builder()
@@ -134,13 +152,15 @@ public class CerberusMetadataLookup {
                     .addHeader(CERBERUS_TOKEN, chain.getCredentials().getToken())
                     .get()
                     .build();
+            logger.info("Sending request...");
             Response response = httpClient.newCall(request).execute();
             String responseBody = response.body().string();
+            logger.info("Received response! Response: " + responseBody);
             result = new ObjectMapper().readValue(responseBody, HashMap.class);
+            logger.info("Got metadata information from Cerberus! Offset: " + offset);
         } catch (IOException e) {
             throw new RuntimeException("I/O error while communicating with Cerberus", e);
         }
-
         return result;
     }
 }

@@ -59,17 +59,23 @@ public class AthenaQuery {
      */
     private GetQueryResultsResult executeAthenaQuery(String query) throws InterruptedException {
 
+        String region = System.getenv("REGION");
+        String athenaQueryResultsBucket = System.getenv("ATHENA_QUERY_RESULTS_BUCKET");
+
+        logger.info("REGION: " + region);
+        logger.info("BUCKET: " + athenaQueryResultsBucket);
         logger.info("QUERY: " + query);
 
+
         AmazonAthena athena = AmazonAthenaClient.builder()
-            .withRegion(Regions.US_WEST_2)
+            .withRegion(Regions.fromName(region))
             .withCredentials(DefaultAWSCredentialsProviderChain.getInstance())
             .build();
 
         StartQueryExecutionResult result = athena
             .startQueryExecution(new StartQueryExecutionRequest()
                 .withQueryString(query)
-                .withResultConfiguration(new ResultConfiguration().withOutputLocation("s3://aws-athena-query-results-933764306573-us-west-2/ip-address-translator"))
+                .withResultConfiguration(new ResultConfiguration().withOutputLocation(athenaQueryResultsBucket))
             );
 
         String id = result.getQueryExecutionId();

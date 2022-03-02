@@ -104,6 +104,7 @@ public class IpTranslatorProcessor {
 
         ResultSet result = athenaQuery.processIpAddressInAthena(ipAddress, environment);
 
+        log.info("Adding rows to ip metadata table...");
         result.getRows().stream().skip(1).forEach(row -> {
             Map<String,String> temp = new HashMap<>();
             Iterator<Datum> iter = row.getData().stream().iterator();
@@ -116,8 +117,12 @@ public class IpTranslatorProcessor {
 
             ipMetadataTable.add(temp);
         });
+        log.info("Finished adding rows to ip metadata table...");
 
+        log.info("Attempting to get metadata from Cerberus...");
         ArrayList<Map<String, String>> sdbMetadata = cerberusMetadataLookup.getCerberusMetadata(environment);
+        log.info("Got SDB metadata!");
+
         for (Map<String, String> row : ipMetadataTable) {
             ArrayList<String> owner = cerberusMetadataLookup.searchCerberusMetadata(sdbMetadata, row.get("sdbName"), row.get("principalName"));
             row.put("owner", String.join("\n", owner));
